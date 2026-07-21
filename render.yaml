@@ -1,0 +1,14 @@
+# Render.com blueprint — deploys the CRPT tracker as a free web service.
+# The SQLite snapshot is rebuilt from data/crpt_data.json on every boot, so
+# the free tier's ephemeral disk is fine. Free instances sleep after ~15 min
+# idle; the first visit after a nap takes ~1 minute to wake.
+services:
+  - type: web
+    name: crpt-tracker
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd backend && python loader.py && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.6
