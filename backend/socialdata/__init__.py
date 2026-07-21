@@ -13,4 +13,7 @@ def get_adapter():
     if name == "stocktwits":
         from .stocktwits import StocktwitsAdapter
         return StocktwitsAdapter()
+    if name == "reddit":
+        from .reddit import RedditAdapter
+        return RedditAdapter()
     raise ValueError(f"Unknown social adapter: {name!r}")

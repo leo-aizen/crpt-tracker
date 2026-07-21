@@ -8,7 +8,9 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 
 from .base import NewsAdapter
+from .curated_rss import CuratedRssAdapter
 from .google_news import GoogleNewsAdapter
+from .sec_edgar import SecEdgarAdapter
 from .yahoo_rss import YahooRssAdapter
 
 
@@ -20,11 +22,13 @@ class MultiAdapter(NewsAdapter):
     name = "multi"
 
     def __init__(self):
-        self.providers = [YahooRssAdapter(), GoogleNewsAdapter()]
-        self.source_label = "Yahoo Finance RSS + Google News RSS (multi-outlet, deduped)"
+        self.providers = [YahooRssAdapter(), GoogleNewsAdapter(),
+                          CuratedRssAdapter(), SecEdgarAdapter()]
+        self.source_label = ("Yahoo · Google News · WSJ · CNBC · MarketWatch · "
+                             "CoinDesk · Cointelegraph · The Block · SEC EDGAR (deduped)")
 
     def news(self, tickers, names=None):
-        with ThreadPoolExecutor(max_workers=2) as pool:
+        with ThreadPoolExecutor(max_workers=4) as pool:
             results = list(pool.map(lambda p: self._safe(p, tickers, names), self.providers))
         merged = {}
         for items in results:

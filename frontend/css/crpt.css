@@ -386,6 +386,9 @@ header h1 .version { white-space: nowrap; }
   border-radius: 4px;
   background: linear-gradient(to right, rgba(214,69,69,0.8), var(--panel-3), rgba(47,158,95,0.8));
 }
+.crpt-heatlegend .grad.blue {
+  background: linear-gradient(to right, rgba(57,135,229,0.08), rgba(57,135,229,0.78));
+}
 .crpt-heatlegend .note { margin-left: auto; }
 
 .socialbody { margin-top: 0; -webkit-line-clamp: 4; }

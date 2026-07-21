@@ -659,6 +659,7 @@ $("newsSearch").addEventListener("input", (ev) => {
 /* ---- social tab: mention heatmap + per-holding stream ---- */
 let socialData = null;
 let socialSelected = null;
+let socialMode = "attention"; // "attention" = share of convo, "price" = day move
 
 /* Finance-standard diverging tile color: red (down) -> neutral -> green (up),
    clamped at ±3% like the classic index heatmaps. Direction is the ONLY thing
@@ -673,26 +674,46 @@ function tileColor(changePct) {
 function renderHeatmap() {
   const d = socialData;
   $("socialAsOf").textContent = `fetched ${d.fetched_at_utc} · ${d.source}`;
+  const rates = d.holdings.filter((h) => h.covered && h.post_rate_per_day != null);
+  const totalRate = rates.reduce((a, h) => a + h.post_rate_per_day, 0) || 1;
+  const maxShare = Math.max(1e-6, ...rates.map((h) => h.post_rate_per_day / totalRate));
+  const attention = socialMode === "attention";
+
   $("heatmapBody").innerHTML = `<div class="crpt-heatmap">` + d.holdings.map((h) => {
     const big = (h.weight_pct || 0) >= 9 ? "span2" : "";
     const chg = h.change_pct;
     const chgTxt = chg != null ? (chg > 0 ? "+" : "") + chg.toFixed(2) + "%" : "no px data";
     const rate = h.post_rate_per_day;
-    const social = h.covered
-      ? (rate != null ? `~${rate}/d posts` : "rate: no data")
-      : "no social data";
+    const share = (h.covered && rate != null) ? rate / totalRate : null;
+    const shareTxt = share != null ? (share * 100).toFixed(1) + "% of convo" : (h.covered ? "rate: no data" : "no social data");
+    const weekTxt = rate != null ? `~${Math.round(rate * 7).toLocaleString("en-US")} posts/wk` : "";
+
+    let bg, bigTxt, subTxt;
+    if (attention) {
+      // sequential single-hue: intensity = this name's share of all conversation
+      const a2 = share == null ? 0.04 : 0.07 + 0.68 * Math.sqrt(share / maxShare);
+      bg = share == null ? "var(--panel-2)" : `rgba(57,135,229,${a2.toFixed(3)})`;
+      bigTxt = shareTxt;
+      subTxt = weekTxt || (h.covered ? "no rate data" : "no social data");
+    } else {
+      bg = tileColor(chg);
+      bigTxt = chgTxt;
+      subTxt = h.covered ? (rate != null ? `~${rate}/d posts` : "rate: no data") : "no social data";
+    }
     return `<button type="button" class="crpt-heattile ${big} ${h.ticker === socialSelected ? "active" : ""} ${h.covered ? "" : "nocover"}"
-      data-ticker="${h.ticker}" style="background:${tileColor(chg)}"
-      title="${esc(h.name)} — ${h.weight_pct}% of fund · ${chgTxt} today · ${social}${h.watchers != null ? ` · ${h.watchers.toLocaleString("en-US")} watchers` : ""}">
+      data-ticker="${h.ticker}" style="background:${bg}"
+      title="${esc(h.name)} — ${h.weight_pct}% of fund · ${chgTxt} today · ${shareTxt}${h.watchers != null ? ` · ${h.watchers.toLocaleString("en-US")} watchers` : ""}">
       <span class="tkrow"><span class="tk mono">${h.ticker}</span><span class="wt mono">${h.weight_pct}%</span></span>
-      <span class="chg">${chgTxt}</span>
-      <span class="watch mono">${social}</span>
+      <span class="chg">${bigTxt}</span>
+      <span class="watch mono">${subTxt}</span>
     </button>`;
   }).join("") + `</div>
-  <div class="crpt-heatlegend mono">
-    <span>-3%</span><span class="grad"></span><span>+3%</span>
-    <span class="note">color = today's price move (~15 min delayed) · text = est. posts/day</span>
-  </div>`;
+  <div class="crpt-heatlegend mono">` + (attention
+    ? `<span>quiet</span><span class="grad blue"></span><span>loudest</span>
+       <span class="note">color = share of this week's holding conversation (est.) · Stocktwits</span>`
+    : `<span>-3%</span><span class="grad"></span><span>+3%</span>
+       <span class="note">color = today's price move (~15 min delayed) · text = est. posts/day</span>`) +
+  `</div>`;
 }
 
 function renderSocialPosts() {
@@ -776,6 +797,14 @@ async function copySocialAiPrompt() {
 }
 
 document.getElementById("view-social").addEventListener("click", (ev) => {
+  const mode = ev.target.closest("#socialModes .crpt-range");
+  if (mode) {
+    socialMode = mode.dataset.mode;
+    document.querySelectorAll("#socialModes .crpt-range").forEach((x) =>
+      x.classList.toggle("active", x === mode));
+    if (socialData) renderHeatmap();
+    return;
+  }
   const tile = ev.target.closest(".crpt-heattile[data-ticker]");
   if (tile) {
     socialSelected = tile.dataset.ticker;

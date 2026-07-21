@@ -11,12 +11,12 @@
   <title>CRPT Tracker</title>
   <!-- SURF visual baseline, reused verbatim as its own stylesheet (style parity,
        not code copy). CRPT-specific components live in crpt.css. -->
-  <link rel="stylesheet" href="css/surf-styles.css?v=0.9.0" />
-  <link rel="stylesheet" href="css/crpt.css?v=0.9.0" />
+  <link rel="stylesheet" href="css/surf-styles.css?v=0.10.0" />
+  <link rel="stylesheet" href="css/crpt.css?v=0.10.0" />
 </head>
 <body>
   <header>
-    <h1 id="title">CRPT <span class="version">v0.9.0</span></h1>
+    <h1 id="title">CRPT <span class="version">v0.10.0</span></h1>
     <div class="news-meta" id="dataMeta">
       <div class="scope-banner" id="scopeBanner"></div>
       <div class="status" id="loadStatus">connecting…</div>
@@ -41,11 +41,16 @@
           <span class="crpt-card-title">Social activity by holding</span>
           <span class="crpt-asof mono" id="socialAsOf">loading…</span>
         </div>
+        <div class="crpt-ranges" id="socialModes" role="tablist" aria-label="Heatmap mode">
+          <button type="button" role="tab" class="crpt-range active" data-mode="attention">Attention share</button>
+          <button type="button" role="tab" class="crpt-range" data-mode="price">Price move</button>
+        </div>
         <div id="heatmapBody"><p class="crpt-footnote">loading…</p></div>
-        <p class="crpt-footnote">Tile brightness scales with estimated posts/day, computed from each
-        symbol's latest 30 Stocktwits messages — an estimate, not a census. Watcher counts are the
-        symbol's followers. Metaplanet trades in Tokyo and isn't on Stocktwits: no data, not zero.
-        Click a tile to read the stream.</p>
+        <p class="crpt-footnote">Attention share = each name's slice of all post activity across the
+        fund's holdings this week, estimated from each symbol's latest messages — an estimate, not a
+        census. Metaplanet trades in Tokyo and isn't on Stocktwits: no data, not zero. A Reddit
+        adapter is built and ready — it needs free Reddit API credentials (see README). Click a tile
+        to read the stream.</p>
       </div>
       <div class="crpt-card" id="socialPostsCard" hidden>
         <div class="crpt-card-head">
@@ -162,7 +167,7 @@
     </section>
   </main>
 
-  <script src="js/chart.js?v=0.9.0"></script>
-  <script src="js/app.js?v=0.9.0"></script>
+  <script src="js/chart.js?v=0.10.0"></script>
+  <script src="js/app.js?v=0.10.0"></script>
 </body>
 </html>
