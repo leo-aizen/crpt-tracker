@@ -274,6 +274,23 @@ header h1 .version { white-space: nowrap; }
   display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 7px;
 }
 .crpt-holdtable tr.bucket-head .bw { color: var(--muted); margin-left: 8px; font-size: 11px; }
+.crpt-holdtable td.go { width: 34px; padding-left: 2px; }
+.crpt-newsjump {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.crpt-newsjump:hover {
+  color: var(--accent);
+  border-color: var(--accent-2);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
 
 /* Stage 5: news feed */
 .crpt-newsbar { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }

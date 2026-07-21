@@ -319,11 +319,20 @@ function renderBuckets(d) {
      managed, so they move daily.</p>`;
 }
 
+const SEARCH_ICON = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none"
+  stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+  <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.8-4.8"/></svg>`;
+
 function holdingRow(li, maxW) {
   const chips = [];
   if (!li.priceable) chips.push(`<span class="crpt-chip">not priceable</span>`);
   // note fields in the data file are internal build guidance — not rendered
   const w = li.weight_pct || 0;
+  // news-jump shortcut for every real security (cash has no news feed)
+  const jump = li.classification !== "Cash" && li.ticker
+    ? `<button type="button" class="crpt-newsjump" data-ticker="${li.ticker}"
+         title="See all news for ${esc(li.name)}" aria-label="News for ${li.ticker}">${SEARCH_ICON}</button>`
+    : "";
   return `<tr>
     <th class="tk"><span class="mono">${li.ticker || "—"}</span></th>
     <td class="nm">${li.name}${chips.join("")}</td>
@@ -332,11 +341,12 @@ function holdingRow(li, maxW) {
     <td class="num">${fmtCompact(li.market_value_usd) ?? `<span class="nodata">no data</span>`}</td>
     <td class="wt"><span class="wv">${fmtPct(w)}</span>
       <span class="crpt-wbar"><span style="width:${(w / maxW) * 100}%;background:${bucketColor(li)}"></span></span></td>
+    <td class="go">${jump}</td>
   </tr>`;
 }
 
 const HOLD_HEAD = `<thead><tr><th>Ticker</th><th>Name</th><th>Classification</th>
-  <th class="num">Shares</th><th class="num">Mkt value</th><th>Weight</th></tr></thead>`;
+  <th class="num">Shares</th><th class="num">Mkt value</th><th>Weight</th><th></th></tr></thead>`;
 
 function renderHoldings(d, mode) {
   $("holdingsAsOf").textContent = `as of ${d.as_of}`;
@@ -347,11 +357,11 @@ function renderHoldings(d, mode) {
     d.line_items.forEach((li) => { (byKey[li.bucket_key || "_none"] ||= []).push(li); });
     body = d.buckets.map((b) => {
       const rows = (byKey[b.bucket_key] || []).map((li) => holdingRow(li, maxW)).join("");
-      return `<tr class="bucket-head"><th colspan="6">
+      return `<tr class="bucket-head"><th colspan="7">
         <span class="sw" style="background:${BUCKET_COLORS[b.bucket_key]}"></span>
         ${BUCKET_SHORT[b.bucket_key]} <span class="mono bw">${fmtPct(b.approx_weight_pct)}</span></th></tr>${rows}`;
     }).join("") +
-    (byKey._none ? `<tr class="bucket-head"><th colspan="6">
+    (byKey._none ? `<tr class="bucket-head"><th colspan="7">
         <span class="sw" style="background:${CASH_COLOR}"></span>Cash (no bucket)</th></tr>` +
       byKey._none.map((li) => holdingRow(li, maxW)).join("") : "");
   } else {
@@ -385,6 +395,18 @@ $("holdingsMode").addEventListener("click", (ev) => {
   document.querySelectorAll("#holdingsMode .crpt-range").forEach((x) =>
     x.classList.toggle("active", x === b));
   if (holdingsData) renderHoldings(holdingsData, holdingsMode);
+});
+
+/* Search-icon shortcut: any holding row -> News tab pre-filtered to it */
+document.getElementById("view-holdings").addEventListener("click", (ev) => {
+  const jump = ev.target.closest(".crpt-newsjump");
+  if (!jump) return;
+  newsTicker = jump.dataset.ticker;
+  newsSignal = "ALL";
+  newsSource = "ALL";
+  document.querySelector('.list-tab[data-view="news"]').click();
+  if (newsData) { renderSignalFilter(newsData); renderNews(); }
+  window.scrollTo(0, 0);
 });
 
 /* ---- stage 5: news feed ---- */
@@ -855,17 +877,10 @@ $("socialAiPrompt").addEventListener("click", copySocialAiPrompt);
 
 /* ---- provenance card + boot ---- */
 async function boot() {
-  const status = $("loadStatus");
-  const banner = $("scopeBanner");
-  $("dataMeta").hidden = false;
   try {
     const [metaRes, fundRes] = await Promise.all([fetch("/api/meta"), fetch("/api/fund")]);
     if (!metaRes.ok) throw new Error(`API ${metaRes.status}`);
     const meta = await metaRes.json();
-
-    banner.innerHTML = `<strong>CRPT</strong> snapshot ${meta.holdings_as_of || "?"}`;
-    status.textContent = "data spine OK";
-    status.className = "status ok";
 
     $("provAsOf").textContent = `holdings as of ${meta.holdings_as_of || "—"}`;
     $("provSource").textContent = (meta.source_of_truth || "—").replace(/\.$/, "");
@@ -887,9 +902,6 @@ async function boot() {
         `<div class="crpt-card"><p class="crpt-footnote">no data — /api/fund returned ${fundRes.status}</p></div>`;
     }
   } catch (err) {
-    status.textContent = "backend unreachable";
-    status.className = "status err";
-    banner.innerHTML = "<strong>CRPT</strong> no data";
     $("provStatus").textContent = `no data — ${err.message}. Run the loader, then start the API (see README).`;
     $("provStatus").className = "v err";
   }
