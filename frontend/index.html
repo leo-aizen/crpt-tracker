@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CRPT" />
+  <title>CRPT Tracker</title>
+  <!-- SURF visual baseline, reused verbatim as its own stylesheet (style parity,
+       not code copy). CRPT-specific components live in crpt.css. -->
+  <link rel="stylesheet" href="css/surf-styles.css?v=0.9.0" />
+  <link rel="stylesheet" href="css/crpt.css?v=0.9.0" />
+</head>
+<body>
+  <header>
+    <h1 id="title">CRPT <span class="version">v0.9.0</span></h1>
+    <div class="news-meta" id="dataMeta">
+      <div class="scope-banner" id="scopeBanner"></div>
+      <div class="status" id="loadStatus">connecting…</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Pinned view toolbar, SURF pattern: tabs stay put as content scrolls. -->
+    <div class="companies-toolbar crpt-toolbar">
+      <div class="list-tabs" role="tablist" aria-label="View">
+        <button class="list-tab active" type="button" role="tab" data-view="overview" aria-selected="true">Overview</button>
+        <button class="list-tab" type="button" role="tab" data-view="holdings" aria-selected="false">Holdings <span class="list-tab-count" id="holdingsCount" hidden></span></button>
+        <button class="list-tab" type="button" role="tab" data-view="news" aria-selected="false">News</button>
+        <button class="list-tab" type="button" role="tab" data-view="social" aria-selected="false">Social</button>
+      </div>
+    </div>
+
+    <!-- SOCIAL: mention heatmap + per-holding stream (rendered by app.js) -->
+    <section id="view-social" class="crpt-view" hidden>
+      <div class="crpt-card">
+        <div class="crpt-card-head">
+          <span class="crpt-card-title">Social activity by holding</span>
+          <span class="crpt-asof mono" id="socialAsOf">loading…</span>
+        </div>
+        <div id="heatmapBody"><p class="crpt-footnote">loading…</p></div>
+        <p class="crpt-footnote">Tile brightness scales with estimated posts/day, computed from each
+        symbol's latest 30 Stocktwits messages — an estimate, not a census. Watcher counts are the
+        symbol's followers. Metaplanet trades in Tokyo and isn't on Stocktwits: no data, not zero.
+        Click a tile to read the stream.</p>
+      </div>
+      <div class="crpt-card" id="socialPostsCard" hidden>
+        <div class="crpt-card-head">
+          <span class="crpt-card-title" id="socialPostsTitle">Stream</span>
+          <button type="button" class="crpt-range crpt-aibtn" id="socialAiPrompt"
+                  title="Copy a paste-ready AI prompt summarizing this holding's posts">AI PROMPT</button>
+        </div>
+        <div id="socialPostsBody"></div>
+        <p class="crpt-footnote">Post text is unvetted retail chatter from public streams — read it as
+        sentiment, never as fact. Links open on Stocktwits.</p>
+      </div>
+    </section>
+
+    <!-- OVERVIEW: live price + chart (stage 3), then facts (stage 2) -->
+    <section id="view-overview" class="crpt-view">
+      <div class="crpt-card" id="liveCard">
+        <div class="crpt-card-head">
+          <span class="crpt-card-title">Live price <span class="crpt-chip">~15 min delay</span></span>
+          <span class="crpt-asof mono" id="liveAsOf">connecting…</span>
+        </div>
+        <div class="crpt-live" id="liveBody"><span class="nodata">no data yet</span></div>
+        <p class="crpt-footnote" id="liveSource"></p>
+      </div>
+
+      <div class="crpt-card" id="chartCard">
+        <div class="crpt-card-head">
+          <span class="crpt-card-title" id="chartTitle">CRPT price</span>
+          <span class="crpt-asof mono" id="chartAsOf"></span>
+        </div>
+        <div class="crpt-chartbar">
+          <div class="crpt-ranges" id="chartModes" role="tablist" aria-label="Chart mode">
+            <button type="button" role="tab" class="crpt-range active" data-mode="price">CRPT ($)</button>
+            <button type="button" role="tab" class="crpt-range" data-mode="pct">vs benchmarks (%)</button>
+          </div>
+          <div class="crpt-ranges" id="chartRanges" role="tablist" aria-label="Chart window"></div>
+        </div>
+        <div id="chartBody"><p class="crpt-footnote">loading…</p></div>
+        <p class="crpt-footnote">Prices are ~15 minutes delayed on the free feed. The 1W window uses
+        30-minute bars; longer windows use daily closes. In compare mode every series is rebased to 0%
+        at the window start — the only fair way to overlay a $12 fund on a $600 index. IBIT ≈ spot
+        bitcoin, BITQ ≈ crypto-equity peers, SPY ≈ broad equities.</p>
+      </div>
+      <div class="crpt-card" id="provenanceCard">
+        <div class="crpt-card-head">
+          <span class="crpt-card-title">Data snapshot</span>
+          <span class="crpt-asof mono" id="provAsOf">as of —</span>
+        </div>
+        <div class="crpt-facts" id="provFacts">
+          <div class="crpt-fact"><span class="k">Status</span><span class="v" id="provStatus">no data</span></div>
+        </div>
+        <p class="crpt-footnote">Source of truth: <span class="mono" id="provSource">—</span>.
+        All figures are point-in-time snapshots labeled with their as-of dates. Live
+        prices arrive in stage 3 via the market-data adapter — nothing here is a live quote.</p>
+      </div>
+
+      <!-- Stage 2: fund facts + historical snapshots, rendered by app.js -->
+      <div id="fundCards"></div>
+    </section>
+
+    <!-- HOLDINGS (stage 4): rendered by app.js -->
+    <section id="view-holdings" class="crpt-view" hidden>
+      <div class="crpt-card" id="bucketsCard">
+        <div class="crpt-card-head">
+          <span class="crpt-card-title">What CRPT structurally is</span>
+          <span class="crpt-asof mono" id="bucketsAsOf">as of —</span>
+        </div>
+        <div id="bucketsBody"><p class="crpt-footnote">loading…</p></div>
+      </div>
+      <div class="crpt-card" id="holdingsCard">
+        <div class="crpt-card-head">
+          <span class="crpt-card-title">Holdings</span>
+          <span class="crpt-asof mono" id="holdingsAsOf">as of —</span>
+        </div>
+        <div class="crpt-ranges" id="holdingsMode" role="tablist" aria-label="Holdings grouping">
+          <button type="button" role="tab" class="crpt-range active" data-mode="weight">By weight</button>
+          <button type="button" role="tab" class="crpt-range" data-mode="bucket">By bucket</button>
+        </div>
+        <div id="holdingsBody"><p class="crpt-footnote">loading…</p></div>
+        <p class="crpt-footnote" id="holdingsFoot"></p>
+      </div>
+    </section>
+
+    <!-- NEWS (stage 5): rendered by app.js -->
+    <section id="view-news" class="crpt-view" hidden>
+      <div class="crpt-card">
+        <div class="crpt-card-head">
+          <span class="crpt-card-title">News across holdings</span>
+          <span class="crpt-asof mono" id="newsAsOf">loading…</span>
+        </div>
+        <div class="crpt-newsbar">
+          <div class="crpt-dd" id="holdingsDD">
+            <button type="button" class="crpt-range crpt-ddbtn" id="holdingsBtn"
+                    aria-haspopup="listbox" aria-expanded="false">All holdings ▾</button>
+            <div class="crpt-ddpanel" id="holdingsPanel" hidden>
+              <input type="search" class="input" id="holdingsSearch" placeholder="Search holdings…" autocomplete="off" />
+              <div class="crpt-ddlist" id="holdingsList" role="listbox"></div>
+            </div>
+          </div>
+          <button type="button" class="crpt-range" id="filtersBtn" aria-expanded="false">Filters ▾</button>
+          <input type="search" class="input crpt-newssearch" id="newsSearch"
+                 placeholder="Search headlines…" />
+          <button type="button" class="crpt-range crpt-refresh" id="newsRefresh">refresh</button>
+          <button type="button" class="crpt-range crpt-aibtn" id="aiPrompt"
+                  title="Copy a paste-ready AI briefing prompt built from the items currently on screen">AI PROMPT</button>
+        </div>
+        <div class="crpt-signalwrap" id="signalWrap" hidden>
+          <div class="crpt-ranges crpt-newsfilter" id="signalFilter" role="tablist" aria-label="Filter by signal"></div>
+          <p class="crpt-footnote">Signals are auto-tagged by keyword rules (heuristic routing hints,
+          not verified claims). Filters combine: holding × signal × search.</p>
+        </div>
+        <div id="newsBody"><p class="crpt-footnote">loading…</p></div>
+        <p class="crpt-footnote" id="newsFoot"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/chart.js?v=0.9.0"></script>
+  <script src="js/app.js?v=0.9.0"></script>
+</body>
+</html>

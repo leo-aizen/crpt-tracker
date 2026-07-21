@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "crpt-tracker",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "uvicorn", "main:app", "--port", "8642"],
+      "cwd": "backend",
+      "port": 8642
+    }
+  ]
+}

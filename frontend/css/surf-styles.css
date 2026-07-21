@@ -1,0 +1,1407 @@
+    :root {
+      /* Surfaces — true OLED black with a neutral-gray elevation system.
+         The whole app is one neon-on-black "control panel": cyan accent,
+         monospaced HUD metadata, soft glows on interactive surfaces. No
+         color wash on the base surfaces — the black stays black. */
+      --bg: #000000;
+      --bg-elevated: #0a0a0a;
+      --panel: #0d0d0d;
+      --panel-2: #161616;
+      --panel-3: #202020;
+      --border: #262626;
+      --border-strong: #3a3a3a;
+      /* Text — neutral grayscale, no cool tint */
+      --text: #f0f0f0;
+      /* Headline text — softened off pure white so titles read less harshly */
+      --text-headline: #d4d4d4;
+      --text-2: #b8b8b8;
+      --muted: #8a8a8a;
+      --muted-2: #5a5a5a;
+      /* Accent — neon cyan. Used as outline + label + glow on dark; no solid
+         neon fills anywhere, so the UI stays in true dark mode. */
+      --accent: #5ce1ff;
+      --accent-2: #29b6df;
+      --news-red: #e53535;
+      --accent-glow: rgba(92, 225, 255, 0.28);
+      /* Monospace — used for the HUD layer: version, counts, tags, labels,
+         scope/status readouts, and button captions. Prose stays sans. */
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      /* Signal colors + soft tinted backgrounds */
+      --ipo: #ffb168;
+      --ipo-bg: rgba(255, 177, 104, 0.14);
+      --funding: #ffcb6b;
+      --funding-bg: rgba(255, 203, 107, 0.14);
+      --leadership: #c792ea;
+      --leadership-bg: rgba(199, 146, 234, 0.14);
+      --product: #82e0aa;
+      --product-bg: rgba(130, 224, 170, 0.14);
+      --financial: #7dd3fc;
+      --financial-bg: rgba(125, 211, 252, 0.14);
+      --general: #9a9aa6;
+      --general-bg: rgba(154, 154, 166, 0.10);
+      --triage: #ffb168;
+      --triage-glow: rgba(255, 177, 104, 0.24);
+      --danger: #ff7676;
+      /* Elevation */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+      /* Radii */
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--text);
+      font: 15px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    /* No background ambience — the base stays true OLED black with no
+       color wash. Depth comes from the neutral-gray elevation of panels. */
+    header, main, .modal-backdrop { position: relative; z-index: 1; }
+    a { color: var(--accent); text-decoration: none; }
+
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(0, 0, 0, 0.8);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    header h1 { font-size: 19px; margin: 0; flex: 1; letter-spacing: -0.2px; font-weight: 800; }
+    header h1 .version {
+      font-family: var(--mono);
+      font-size: 10px; font-weight: 500; color: var(--accent-2);
+      margin-left: 8px; letter-spacing: 0.6px;
+      text-transform: uppercase;
+      vertical-align: 1px;
+    }
+    /* Live refresh tally, pinned to the right of the title bar. Mirrors the
+       background "Refresh all" sweep so progress stays visible no matter how
+       far the list is scrolled. */
+    header .refresh-tally {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 12px; font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.4px; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    header .refresh-tally[hidden] { display: none; }
+    /* News view swaps the tally for a compact scope + freshness readout,
+       right-aligned in the title bar (Market Monitor cyan, monospaced). */
+    header .news-meta {
+      margin-left: auto;
+      display: flex; flex-direction: column; align-items: flex-end;
+      gap: 3px; text-align: right; min-width: 0;
+    }
+    header .news-meta[hidden] { display: none; }
+    header .news-meta .scope-banner,
+    header .news-meta .status {
+      font-family: var(--mono);
+      font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase;
+      margin: 0; padding: 0; border: 0; background: none;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+      flex: none; line-height: 1.3;
+      font-variant-numeric: tabular-nums;
+    }
+    header .news-meta .scope-banner strong { color: var(--accent); font-weight: 700; }
+    header .news-meta .scope-banner[hidden] { display: none; }
+    header .news-meta .status.err { color: var(--danger); }
+    header .news-meta .status.ok { color: var(--product); }
+    header .news-meta .status .dot-pulse {
+      width: 7px; height: 7px; border-radius: 999px; background: var(--accent);
+      animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0;
+    }
+    /* Header buttons are rounded-rectangle pillboxes (not full pills) so they
+       match the news-view toolbar pills. Scoped to header so modals/forms
+       elsewhere keep the original full-pill primary button shape. */
+    header .btn { border-radius: 10px; }
+    /* While a background prefetch is running the button demotes itself to a
+       status indicator: no gradient, no glow, muted text, no tap response. */
+    header .btn.primary.is-loading,
+    .action-row .btn.primary.is-loading {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--panel);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      box-shadow: none;
+      cursor: default;
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    .btn {
+      appearance: none; -webkit-appearance: none;
+      background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 7px 12px; font-size: 13px; cursor: pointer;
+      font-weight: 500;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, color 0.15s ease;
+    }
+    .btn:hover { background: var(--panel-3); border-color: var(--border-strong); }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* Outlined "neon ghost" primary — dark glassy fill, cyan edge + label,
+       soft inner/outer glow. Keeps the cyberpunk accent without a solid
+       block of colour. */
+    .btn.primary {
+      background: rgba(92, 225, 255, 0.07);
+      color: var(--accent); border-color: var(--accent);
+      box-shadow: inset 0 0 12px rgba(92, 225, 255, 0.08), 0 0 14px rgba(92, 225, 255, 0.1);
+      font-weight: 700;
+    }
+    .btn.primary:hover {
+      background: rgba(92, 225, 255, 0.14); border-color: var(--accent);
+      box-shadow: inset 0 0 14px rgba(92, 225, 255, 0.12), 0 0 22px var(--accent-glow);
+    }
+    /* Outlined destructive: large tap target, but visually de-emphasised so
+       it doesn't out-shout the primary action in modal action bars. */
+    .btn.danger-ghost {
+      background: transparent;
+      color: var(--danger);
+      border-color: rgba(255, 118, 118, 0.5);
+      font-weight: 600;
+    }
+    .btn.danger-ghost:hover { background: rgba(255, 118, 118, 0.08); border-color: var(--danger); }
+    /* Generous tap padding so Edit/Remove hit Apple's 44px minimum on iPhone
+       without growing the visual weight of the row. */
+    .btn.link { background: transparent; border: 0; color: var(--accent); padding: 10px 10px; font-size: 13px; font-weight: 500; }
+    .btn.link:hover { color: #fff; }
+
+    main { padding: 10px 14px calc(env(safe-area-inset-bottom) + 28px); max-width: 760px; margin: 0 auto; }
+
+    /* iOS-style segmented control that toggles the companies view between
+       the Holdings list (companies we own) and the IPO Prospects list (the
+       prospects we're tracking). Sits directly above the company list so
+       it reads as the scope selector for the rows immediately below it. */
+    /* Locked top region for the companies view. Pins the scope tabs, primary
+       actions, and search beneath the sticky title bar, full-bleed across the
+       width of the app so the bar reads as one solid control surface. */
+    .companies-toolbar {
+      position: sticky;
+      top: var(--header-h, 56px);
+      z-index: 19;
+      margin: -10px -14px 12px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.8);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .companies-toolbar > :last-child { margin-bottom: 0; }
+
+    .list-tabs {
+      display: flex; gap: 5px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 4px;
+      margin: 0 0 8px;
+    }
+    .list-tab {
+      flex: 1;
+      appearance: none; -webkit-appearance: none;
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      padding: 13px 12px;
+      border-radius: 11px;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.1s ease;
+    }
+    .list-tab:hover { color: var(--text-2); }
+    .list-tab:active { transform: scale(0.985); }
+    .list-tab.active {
+      background: linear-gradient(180deg, var(--panel-3) 0%, var(--panel-2) 100%);
+      color: var(--text);
+      box-shadow: 0 0 0 1px var(--accent-glow) inset, 0 2px 12px rgba(0, 0, 0, 0.35);
+    }
+    .list-tab-count {
+      font-family: var(--mono);
+      font-size: 12px; font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted-2);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.4;
+    }
+    .list-tab.active .list-tab-count {
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    /* Primary actions sit on their own full-width row beneath the tabs, each
+       button stretching to fill half the width with rich, bold labels. */
+    .action-row {
+      display: flex; gap: 8px;
+      margin: 0 0 8px;
+    }
+    .action-row .btn {
+      flex: 1;
+      border-radius: 12px;
+      font-family: var(--mono);
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 13px 14px;
+    }
+
+    .controls-row {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 8px;
+    }
+    .controls-row .filter-row { flex: 1; margin: 0; }
+    .controls-row #selCount {
+      font-size: 12px; color: var(--muted);
+      white-space: nowrap; font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .input {
+      flex: 1; background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; font-size: 15px;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .input:hover { background: var(--panel-3); }
+    .input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--panel-3);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    textarea.input {
+      font: 13px/1.4 ui-monospace, Menlo, monospace;
+      min-height: 60px; resize: vertical;
+    }
+
+    /* Companies list. The list breaks out of `main`'s 14px horizontal
+       padding via negative margins so it spans the full viewport width
+       — at 360-430px the 28px of side padding ate ~7% of usable row
+       width, which is a lot when the row already carries a checkbox,
+       logo, name, count badge, and two action buttons. The rest of the
+       page (filter, header chips) stays inside main's padding. Side
+       borders + radius go away once the list is flush with the edge. */
+    .co-list {
+      background: var(--panel); border: 1px solid var(--border);
+      border-left: 0; border-right: 0; border-radius: 0;
+      margin-left: -14px; margin-right: -14px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .co-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-bottom: 1px solid var(--border);
+      min-height: 58px;
+      transition: background 0.12s ease;
+    }
+    .co-row:last-child { border-bottom: 0; }
+    .co-row:hover { background: rgba(255, 255, 255, 0.02); }
+    .co-row .body {
+      flex: 1; min-width: 0;
+      appearance: none; -webkit-appearance: none;
+      background: transparent; border: 0; padding: 0;
+      color: inherit; font: inherit; text-align: left; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .co-row .body:focus { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    .co-row .body .co-text { flex: 1; min-width: 0; }
+    .co-logo {
+      position: relative;
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: var(--panel-2);
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .co-logo .initials {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      color: var(--text-2); text-transform: uppercase;
+      letter-spacing: 0.2px;
+      background: linear-gradient(135deg, var(--panel-3) 0%, var(--panel-2) 100%);
+    }
+    .co-logo img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: contain;
+      background: var(--panel-2);
+    }
+    .co-row .name { font-weight: 600; color: var(--text); font-size: 18px; line-height: 1.3; letter-spacing: -0.2px; }
+    .co-row .alias { font-size: 13px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
+    /* Cached-item count badge next to the company name — uses the accent so
+       "has news" stands out instead of being muted into the row. */
+    .co-count {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 1px 7px;
+      font-family: var(--mono);
+      font-size: 11px; font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-glow);
+      border: 1px solid rgba(92, 225, 255, 0.3);
+      border-radius: 999px;
+      vertical-align: 1px;
+      font-variant-numeric: tabular-nums;
+    }
+    .co-row input[type="checkbox"] {
+      appearance: none; -webkit-appearance: none;
+      width: 22px; height: 22px; flex-shrink: 0;
+      border: 1.5px solid var(--border-strong); border-radius: 6px;
+      background: var(--panel-2); cursor: pointer; position: relative;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .co-row input[type="checkbox"]:hover { border-color: var(--accent); }
+    .co-row input[type="checkbox"]:checked {
+      background: rgba(92, 225, 255, 0.16);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow), 0 0 8px rgba(92, 225, 255, 0.25);
+    }
+    .co-row input[type="checkbox"]:checked::after {
+      content: ""; position: absolute; left: 6px; top: 2px;
+      width: 6px; height: 11px;
+      border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+      transform: rotate(45deg);
+    }
+    /* Per-row action pair. Search news is the primary CTA — wider than
+       it is tall so it reads as a rectangle rather than a square next
+       to Delete, which sits immediately to its left. Delete matches
+       Search's height but is square, so the size hierarchy reads at a
+       glance: Delete = secondary destructive, Search = primary action.
+       Both clear Apple's 44pt minimum once iOS DPR is applied. */
+    .row-news,
+    .row-delete {
+      height: 40px;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      border: 0; border-radius: 10px;
+      color: var(--text); cursor: pointer;
+      transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.2s ease;
+      -webkit-appearance: none; appearance: none;
+      padding: 0;
+    }
+    .row-news:hover,
+    .row-delete:hover { filter: brightness(1.06); }
+    .row-news:active,
+    .row-delete:active { transform: scale(0.94); }
+    .row-news {
+      width: 56px;
+      background: rgba(92, 225, 255, 0.08);
+      border: 1.5px solid var(--accent);
+      box-shadow: inset 0 0 10px rgba(92, 225, 255, 0.08), 0 0 12px rgba(92, 225, 255, 0.1);
+    }
+    .row-news:hover { background: rgba(92, 225, 255, 0.16); box-shadow: inset 0 0 12px rgba(92, 225, 255, 0.12), 0 0 18px var(--accent-glow); }
+    .row-news:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .row-news svg {
+      width: 20px; height: 20px;
+      stroke: var(--accent); fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    /* Delete is the secondary action — should read as "available" not
+       "shouting at you". Ghost surface with a soft red tint, danger
+       icon stroke, no glow. Matches the `.btn.danger-ghost` pattern
+       used in the modal, so the same affordance reads the same way
+       wherever it appears. */
+    .row-delete {
+      width: 40px;
+      background: rgba(255, 118, 118, 0.08);
+      border: 1px solid rgba(255, 118, 118, 0.28);
+      box-shadow: none;
+    }
+    .row-delete:hover { background: rgba(255, 118, 118, 0.14); border-color: rgba(255, 118, 118, 0.55); }
+    .row-delete:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; }
+    .row-delete svg {
+      width: 18px; height: 18px;
+      stroke: var(--danger); fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .empty {
+      color: var(--muted); padding: 28px 14px; text-align: center; font-size: 14px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      line-height: 1.55;
+      box-shadow: var(--shadow-sm);
+    }
+    /* "Found N in the other tab" CTA under the empty-state message. The
+       button is a primary-tinted text link so it reads as actionable
+       without competing with the inline "+ Add" affordance the same
+       no-match path already offers via the filter input. */
+    .empty-hint {
+      margin-top: 10px; text-align: center;
+    }
+    .empty-hint-btn {
+      appearance: none; -webkit-appearance: none;
+      background: transparent; border: 0;
+      color: var(--accent);
+      font-size: 14px; font-weight: 600;
+      padding: 8px 14px; border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .empty-hint-btn:hover { background: var(--accent-glow); color: #fff; }
+
+    /* Filter input above the companies list */
+    .filter-row { margin: 0 0 8px; position: relative; }
+    .filter-input {
+      width: 100%;
+      appearance: none; -webkit-appearance: none;
+      background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px 10px 36px; font-size: 15px;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    /* Reserve trailing room for the inline + Add button so a long typed name
+       doesn't slide under it. Only kicks in when the button is visible. */
+    .filter-row.has-add .filter-input { padding-right: 78px; }
+    .filter-input:hover { background: var(--panel-3); }
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--panel-3);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .filter-row .filter-icon {
+      position: absolute; left: 11px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--muted-2);
+      pointer-events: none;
+    }
+    /* Safari's default search-cancel button is a faint cross that clashes
+       with the dark theme; hide it and rely on the keyboard to clear. */
+    .filter-input::-webkit-search-cancel-button { appearance: none; }
+
+    /* Inline + Add — sits inside the filter input on the right when the
+       typed text doesn't match any company. Lets the user add without
+       moving their eyes (or finger) away from the field they're typing in. */
+    .filter-add {
+      position: absolute; right: 5px; top: 50%;
+      transform: translateY(-50%);
+      appearance: none; -webkit-appearance: none;
+      background: rgba(92, 225, 255, 0.1);
+      color: var(--accent); border: 1px solid var(--accent); border-radius: 8px;
+      padding: 6px 12px; font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      box-shadow: inset 0 0 10px rgba(92, 225, 255, 0.1), 0 0 10px rgba(92, 225, 255, 0.1);
+      transition: background 0.12s ease, box-shadow 0.15s ease, transform 0.08s ease;
+    }
+    .filter-add:hover { filter: brightness(1.05); }
+    .filter-add:active { transform: translateY(-50%) scale(0.97); }
+    .filter-add[hidden] { display: none; }
+
+    /* Sync code card — surfaces the per-device UUID so the user has a way
+       to recover the list after iOS evicts localStorage. Sits above the
+       export/import strip; hidden until we have a device id to show. */
+    .sync-bar {
+      margin: 22px 0 0;
+      padding: 14px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .sync-bar[hidden] { display: none; }
+    .sync-bar-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--muted-2); text-transform: uppercase;
+      letter-spacing: 0.7px;
+      display: flex; align-items: baseline; gap: 8px;
+      margin-bottom: 8px;
+    }
+    .sync-bar-sub {
+      font-size: 11px; font-weight: 500;
+      color: var(--muted); text-transform: none; letter-spacing: 0;
+    }
+    .sync-bar-row {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 6px;
+    }
+    .sync-bar-row:empty { display: none; }
+    .sync-code {
+      flex: 1; min-width: 0;
+      font: 13px/1.3 ui-monospace, Menlo, monospace;
+      background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px;
+      word-break: break-all;
+      user-select: all;
+    }
+    .sync-status {
+      font-size: 12px; color: var(--muted);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .sync-status.ok { color: var(--product); }
+    .sync-status.err { color: var(--danger); }
+
+    /* Backup/restore strip at the bottom of the companies view */
+    .backup-bar {
+      display: flex; gap: 16px; justify-content: center;
+      margin: 28px 0 4px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .backup-bar button {
+      background: transparent; border: 0; color: var(--accent);
+      padding: 10px 12px; font-size: 13px; cursor: pointer;
+      font-weight: 500;
+      transition: color 0.15s ease, transform 0.1s ease;
+    }
+    .backup-bar button:hover { color: #fff; }
+    .backup-bar button:active { transform: scale(0.97); }
+
+    /* News view */
+    .primary-filter {
+      display: block; width: 100%;
+      padding: 13px 14px; margin: 0 0 10px;
+      background: var(--panel-2); color: var(--text-2);
+      border: 1px solid var(--border); border-radius: 12px;
+      font-family: var(--mono);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease, color 0.15s ease;
+    }
+    .primary-filter:hover { background: var(--panel-3); border-color: var(--border-strong); }
+    .primary-filter:active { transform: scale(0.992); }
+    .primary-filter.active {
+      background: rgba(92, 225, 255, 0.12);
+      color: var(--accent); border-color: var(--accent);
+      box-shadow: inset 0 0 14px rgba(92, 225, 255, 0.1), 0 0 18px var(--accent-glow);
+    }
+    /* `display: block` above overrides the UA stylesheet's [hidden] rule, so
+       make it explicit — without this, $triageBtn.hidden=true has no visual
+       effect and the (inert) banner shows in single-company mode. */
+    .primary-filter[hidden] { display: none; }
+    /* Source / list narrowing toggles. Each button is its own clearly-bordered
+       control (not segments blended inside one pill): none lit = the feed spans
+       both sources/lists; tapping one narrows the feed to it, tapping it again
+       returns to both. */
+    .source-seg {
+      display: flex; gap: 8px;
+      margin: 0 0 10px;
+    }
+    .source-seg[hidden] { display: none; }
+    .source-seg-btn {
+      flex: 1; padding: 11px 10px;
+      background: var(--panel-2); color: var(--muted);
+      border: 1px solid var(--border); border-radius: 12px;
+      font-family: var(--mono);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer; -webkit-appearance: none; appearance: none;
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .source-seg-btn:hover { color: var(--text); border-color: var(--border-strong); background: var(--panel-3); }
+    .source-seg-btn.active {
+      background: rgba(92, 225, 255, 0.12); color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: inset 0 0 12px rgba(92, 225, 255, 0.08), 0 0 14px rgba(92, 225, 255, 0.1);
+    }
+    /* Horizontal-scroll chip strip — fits seven signal chips on one line on a
+       phone instead of wrapping to three rows. Negative margins let the strip
+       bleed to the screen edge so the last chip hints at the scroll. */
+    .filters {
+      display: flex; gap: 6px;
+      margin: 0 -14px 10px;
+      padding: 2px 14px 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .chip {
+      font-family: var(--mono);
+      font-size: 11px; padding: 6px 11px; border-radius: 999px;
+      background: var(--panel); border: 1px solid var(--border); color: var(--text-2);
+      cursor: pointer; user-select: none;
+      display: inline-flex; align-items: center; gap: 5px;
+      font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
+      flex-shrink: 0;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+    }
+    .chip:hover { color: var(--text); border-color: var(--border-strong); background: var(--panel-2); }
+    .chip-count {
+      font-size: 10px; padding: 1px 6px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: inherit;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.3;
+    }
+    /* Active chips carry their signal colour as an outline + tint + glow,
+       not a solid fill. */
+    .chip.active {
+      color: var(--accent);
+      background: rgba(92, 225, 255, 0.12);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .chip.active .chip-count { background: rgba(255, 255, 255, 0.1); }
+    /* Per-signal active styling so the chosen chip carries its own color. */
+    .chip.active.sig-ipo { background: var(--ipo-bg); color: var(--ipo); border-color: var(--ipo); box-shadow: 0 0 12px var(--triage-glow); }
+    .chip.active.sig-funding { background: var(--funding-bg); color: var(--funding); border-color: var(--funding); box-shadow: 0 0 12px rgba(255, 203, 107, 0.28); }
+    .chip.active.sig-financial { background: var(--financial-bg); color: var(--financial); border-color: var(--financial); box-shadow: 0 0 12px rgba(125, 211, 252, 0.28); }
+    .chip.active.sig-leadership { background: var(--leadership-bg); color: var(--leadership); border-color: var(--leadership); box-shadow: 0 0 12px rgba(199, 146, 234, 0.28); }
+    .chip.active.sig-product { background: var(--product-bg); color: var(--product); border-color: var(--product); box-shadow: 0 0 12px rgba(130, 224, 170, 0.28); }
+    .chip.active.sig-general { background: var(--panel-3); color: var(--text); border-color: var(--border-strong); box-shadow: none; }
+
+    .status-row {
+      display: flex; align-items: center; gap: 10px;
+      margin: 6px 2px 14px;
+      min-height: 32px;
+    }
+    .status {
+      color: var(--text-2); font-size: 12px;
+      font-family: var(--mono); letter-spacing: 0.5px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+      flex: 1; min-width: 0;
+    }
+    .status.err { color: var(--danger); }
+    .status.ok { color: var(--product); }
+    .status .dot-pulse {
+      width: 8px; height: 8px; border-radius: 999px;
+      background: var(--accent);
+      animation: pulse 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.85); box-shadow: 0 0 0 0 var(--accent-glow); }
+      50% { opacity: 1; transform: scale(1.15); box-shadow: 0 0 0 6px transparent; }
+    }
+    /* Inline spinner for the Refresh / Refresh all buttons while a fetch is in
+       flight. A swapped label alone ("Refreshing…") was too quiet to read as
+       "working" on a warm feed where no skeletons appear — the spin gives the
+       tap an unmistakable, moving acknowledgement. currentColor keeps it
+       legible against whichever loading tint the button carries. */
+    .btn-spinner {
+      display: inline-block; flex-shrink: 0;
+      width: 12px; height: 12px;
+      margin-right: 7px; vertical-align: -2px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 999px;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Center-screen confirmation toast for a finished refresh. Text-driven so
+       it works under "Reduce Motion" (the entrance just becomes instant); the
+       auto-dismiss is a JS timer, not a CSS animation, so it always fires. */
+    .toast {
+      position: fixed;
+      top: calc(var(--header-h, 56px) + env(safe-area-inset-top, 0px) + 12px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      z-index: 200;
+      max-width: calc(100vw - 32px);
+      padding: 12px 18px; border-radius: 12px;
+      background: var(--panel-3);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      font-size: 14px; font-weight: 600; letter-spacing: 0.3px;
+      text-align: center; white-space: nowrap;
+      box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55), 0 0 18px var(--accent-glow);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok { border-color: var(--product); box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55), 0 0 18px rgba(120, 230, 160, 0.25); }
+    .toast.err { border-color: var(--danger); color: var(--danger); box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55), 0 0 18px rgba(255, 118, 118, 0.25); }
+    .toast[hidden] { display: none; }
+    .pill-btn {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 12px; font-size: 12px; font-weight: 700;
+      font-family: var(--mono); letter-spacing: 0.8px; text-transform: uppercase;
+    }
+    .pill-btn svg { width: 14px; height: 14px; }
+    .pill-btn[hidden] { display: none; }
+    .scope-banner {
+      font-size: 13px; color: var(--text-2);
+      margin: 0 2px 10px;
+      display: flex; align-items: baseline; gap: 6px;
+      line-height: 1.35;
+    }
+    .scope-banner strong { color: var(--text); font-weight: 600; }
+    .scope-banner[hidden] { display: none; }
+
+    /* Date group labels in the news feed — Today, Yesterday, etc. */
+    .feed-group-label {
+      font-size: 12px; font-weight: 800;
+      color: var(--news-red); text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 28px 0 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .feed-group-label:first-child { margin-top: 8px; }
+    .feed-group-label .label-line { display: none; }
+    .feed-group-label .count {
+      color: var(--muted-2); font-weight: 500; font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .item {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0; padding: 14px 10px; margin: 0 -10px;
+      box-shadow: none;
+      transition: background 0.1s ease;
+      animation: slideIn 0.28s ease both;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .item:hover { background: var(--panel); }
+    .item .item-head {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 7px;
+    }
+    /* Company name leads each item, sitting above the headline. */
+    .item .company {
+      font-size: 11px; font-weight: 700; color: var(--news-red);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .item h3 { font-size: 16px; font-weight: 600; line-height: 1.4; margin: 0; letter-spacing: -0.1px; }
+    .item h3 a { color: var(--text-headline); transition: color 0.15s ease; }
+    .item h3 a:hover { color: var(--accent); }
+    .item .meta {
+      font-size: 11px; color: var(--muted);
+      display: inline-flex; flex-wrap: wrap; gap: 5px; align-items: center;
+    }
+    .item .meta .source {
+      color: var(--muted); font-weight: 400;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .item .meta .source-favicon {
+      width: 13px; height: 13px; border-radius: 3px;
+      flex-shrink: 0;
+      object-fit: contain;
+      background: var(--panel-2);
+    }
+    .item .meta .dot { opacity: 0.5; }
+
+    /* Company-own source marker (press release / newsroom). */
+    .src-badge {
+      font-family: var(--mono);
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; white-space: nowrap;
+      padding: 2px 7px; border-radius: 999px;
+      color: var(--accent); background: var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .src-badge.mini { font-size: 8px; padding: 1px 5px; letter-spacing: 0.3px; }
+
+    /* "+N more on this story" — collapsed coverage of the same announcement. */
+    .more-coverage { margin-top: 12px; }
+    .more-toggle {
+      font-size: 12px; font-weight: 600; color: var(--text-2);
+      background: var(--panel-2); border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 12px; cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .more-toggle:hover { border-color: var(--border-strong); color: var(--text); }
+    .more-toggle[aria-expanded="true"] { color: var(--accent); }
+    .more-list {
+      list-style: none; margin: 12px 0 2px; padding: 12px 0 0;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    /* `display: flex` above overrides the HTML `hidden` attribute's UA
+       `display: none`, so the list must opt back out explicitly to stay
+       collapsed until the user taps "+N more on this story". */
+    .more-list[hidden] { display: none; }
+    .more-list li { display: flex; flex-direction: column; gap: 4px; }
+    .more-list .story-link { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.35; }
+    .more-list .story-link:hover { color: var(--accent); }
+    .more-meta {
+      font-size: 11px; color: var(--muted);
+      display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .more-meta .source-favicon {
+      width: 12px; height: 12px; border-radius: 3px;
+      flex-shrink: 0; object-fit: contain; background: var(--panel-2);
+    }
+    .more-meta .dot { opacity: 0.5; }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 10px; padding: 3px 9px; border-radius: 999px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      border: 0;
+      flex-shrink: 0;
+    }
+    .item .tag { margin-left: 0; }
+    .tag.ipo { color: var(--ipo); background: var(--ipo-bg); }
+    .tag.funding { color: var(--funding); background: var(--funding-bg); }
+    .tag.leadership { color: var(--leadership); background: var(--leadership-bg); }
+    .tag.product { color: var(--product); background: var(--product-bg); }
+    .tag.financial { color: var(--financial); background: var(--financial-bg); }
+    .tag.general { color: var(--general); background: var(--general-bg); }
+
+    /* Skeleton loading state shown when fetching and the feed is empty. */
+    .skeleton {
+      background: linear-gradient(180deg, var(--panel) 0%, var(--bg-elevated) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px; margin: 8px 0;
+    }
+    .sk-bar {
+      height: 12px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--panel-2) 0%, var(--panel-3) 50%, var(--panel-2) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s linear infinite;
+    }
+    .sk-bar + .sk-bar { margin-top: 8px; }
+    .sk-bar.tall { height: 16px; }
+    .sk-bar.short { height: 10px; }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Scroll-lock for open sheets: @jfs/modal-kit pins the body with
+       position:fixed and a negative top offset (set via the CSSOM by the kit,
+       so a strict CSP style-src still allows it) and restores the scroll
+       position on close. This class supplies the position; the kit supplies
+       the offset. */
+    .modal-open { position: fixed; width: 100%; }
+
+    /* Per-company search modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0, 0, 0, 0.62);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding:
+        calc(env(safe-area-inset-top) + 20px)
+        20px
+        calc(env(safe-area-inset-bottom) + 20px);
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-backdrop[hidden] { display: none; }
+    .modal-panel {
+      background: linear-gradient(180deg, var(--panel) 0%, var(--bg-elevated) 100%);
+      border: 1px solid var(--border-strong);
+      border-radius: 18px; padding: 20px;
+      width: 100%; max-width: 440px;
+      max-height: 100%; overflow-y: auto;
+      outline: none;
+      box-shadow: var(--shadow-lg);
+      animation: modalPop 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalPop {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-head {
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .modal-head .co-logo { width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0; }
+    .modal-head .co-logo .initials { font-size: 18px; }
+    .modal-head-text { flex: 1; min-width: 0; padding-top: 2px; }
+    /* Top-right close affordance for the company sheet. */
+    .modal-close {
+      flex: 0 0 auto; align-self: flex-start;
+      width: 32px; height: 32px; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--panel-2); color: var(--text-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .modal-close:hover { background: var(--panel-3); color: var(--text); border-color: var(--border-strong); }
+    .modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .modal-title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.2px; line-height: 1.25; }
+    .modal-sub {
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 6px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .modal-sub:empty { display: none; }
+    /* Bottom row: Delete (left) · Edit (center) · Search news (right).
+       `space-between` keeps the destructive Delete at the opposite edge
+       from the primary Search news, so the hand path to the primary
+       action doesn't pass over Delete. Close moved to the modal head. */
+    .modal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; align-items: center; justify-content: space-between; }
+    .modal-actions .btn.primary { padding: 11px 18px; font-size: 15px; }
+    .modal-actions .btn.danger-ghost { padding: 11px 18px; font-size: 15px; }
+    .modal-edit-fields { display: flex; flex-direction: column; gap: 8px; }
+    .modal-edit-fields .input { width: 100%; }
+    .modal-edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    /* Per-company list selector inside the edit panel. Lets the user move
+       a company from "IPO Prospects" into "Holdings" (or back) without
+       deleting and re-adding it. Mirrors the segmented control that
+       sits above the companies list so the affordance reads consistently. */
+    .modal-edit-list-row { display: flex; align-items: center; gap: 10px; }
+    .modal-edit-list-label {
+      font-size: 12px; font-weight: 600; color: var(--muted-2);
+      text-transform: uppercase; letter-spacing: 0.6px;
+      min-width: 44px;
+    }
+    .modal-edit-list-toggle {
+      flex: 1;
+      display: flex; gap: 4px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .modal-edit-list-btn {
+      flex: 1;
+      appearance: none; -webkit-appearance: none;
+      background: transparent; border: 0; cursor: pointer;
+      color: var(--muted);
+      font-size: 13px; font-weight: 600;
+      padding: 7px 10px;
+      border-radius: 7px;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .modal-edit-list-btn:hover { color: var(--text-2); }
+    .modal-edit-list-btn.active {
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      color: var(--text);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .modal-result { color: var(--muted); font-size: 12px; margin-top: 12px; }
+    .modal-result.err { color: var(--danger); }
+    .modal-section {
+      margin-top: 18px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .modal-section-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--muted-2); text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .modal-section-label .label-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+    .modal-section-body { font-size: 14px; line-height: 1.55; color: var(--text); }
+    .modal-section-body.muted { color: var(--muted); }
+    .modal-section-body.err { color: var(--danger); }
+    .modal-section-body a { color: var(--accent); }
+    .modal-section-body p { margin: 0 0 8px; }
+    .modal-section-body p:last-child { margin-bottom: 0; }
+
+    /* ---------- AI summary panel ---------- */
+    /* TL;DR lead block — key takeaways as bullets. */
+    .summary-tldr {
+      margin-top: 16px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .summary-tldr-label {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 9px;
+    }
+    .summary-tldr-list { margin: 0; padding-left: 20px; }
+    .summary-tldr-list li {
+      font-size: 15px; line-height: 1.5; color: var(--text);
+      margin-bottom: 8px;
+    }
+    .summary-tldr-list li:last-child { margin-bottom: 0; }
+    .summary-note {
+      margin-top: 14px;
+      font-size: 13px; line-height: 1.5; color: var(--muted);
+    }
+    .summary-note.err { color: var(--danger); }
+    /* A fresh summary is generating in the background; the note shows the
+       placeholder is temporary and the panel is polling. */
+    .summary-note.gen { color: var(--accent); }
+    .summary-gen-dot {
+      display: inline-block; width: 7px; height: 7px; margin-right: 6px;
+      border-radius: 50%; background: var(--accent); vertical-align: middle;
+      animation: summaryPulse 1.1s ease-in-out infinite;
+    }
+    @keyframes summaryPulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+    /* Analysis section — generous separation so it doesn't run into the TL;DR. */
+    .summary-section { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .summary-section-head {
+      display: flex; align-items: baseline; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .summary-section-title {
+      font-size: 14px; font-weight: 700;
+      color: var(--text); text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    /* Analysis bullets. */
+    .summary-points { margin: 0 0 14px; padding-left: 20px; }
+    .summary-points li {
+      font-size: 15px; line-height: 1.5; color: var(--text);
+      margin-bottom: 9px;
+    }
+    .summary-points li:last-child { margin-bottom: 0; }
+    .summary-foot { display: flex; justify-content: flex-end; margin-top: 18px; }
+
+    /* Follow-up Q&A under an AI summary. */
+    .summary-chat { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .summary-chat-label {
+      font-size: 11px; font-weight: 700; color: var(--muted-2);
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px;
+    }
+    .summary-chat-thread { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+    .summary-chat-thread:empty { display: none; }
+    .chat-turn { display: flex; flex-direction: column; gap: 4px; }
+    .chat-turn .chat-q {
+      align-self: flex-end; max-width: 88%;
+      background: var(--accent-glow); color: var(--text);
+      border: 1px solid var(--accent-border, var(--border-strong));
+      border-radius: 14px 14px 4px 14px;
+      padding: 9px 13px; font-size: 14px; line-height: 1.45;
+    }
+    .chat-turn .chat-a {
+      align-self: flex-start; max-width: 100%;
+      color: var(--text); font-size: 15px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .chat-turn .chat-a.err { color: var(--danger); }
+    .chat-turn .chat-a.gen { color: var(--accent); }
+    .summary-chat-form { display: flex; gap: 8px; align-items: center; }
+    .summary-chat-input {
+      flex: 1; min-width: 0;
+      background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 10px 15px; font-size: 14px; font-family: inherit;
+      outline: none;
+    }
+    .summary-chat-input:focus { border-color: var(--accent); }
+    .summary-chat-input::placeholder { color: var(--muted); }
+    .summary-chat-send { flex: 0 0 auto; }
+    .summary-chat-send:disabled { opacity: 0.5; cursor: default; }
+    .summary-skeleton {
+      margin-top: 16px; height: 14px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--panel-2) 25%, var(--panel-3) 50%, var(--panel-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    .modal-desc-thumb {
+      float: right; width: 72px; height: 72px;
+      margin: 0 0 8px 12px;
+      border-radius: 10px; object-fit: cover;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+    }
+    .modal-desc-source { color: var(--muted); font-size: 12px; margin-top: 8px; clear: both; }
+    .modal-txn-title { font-weight: 600; margin-bottom: 6px; line-height: 1.35; }
+    .modal-txn-title a { color: var(--text); transition: color 0.15s ease; }
+    .modal-txn-title a:hover { color: var(--accent); }
+    .modal-txn-meta {
+      font-size: 12px; color: var(--muted);
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .modal-txn-meta .source { color: var(--text-2); font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+    .modal-txn-meta .source-favicon { width: 14px; height: 14px; border-radius: 3px; object-fit: contain; }
+    .modal-txn-meta .dot { opacity: 0.5; }
+    .modal-txn-meta .tag { margin-left: auto; }
+
+    /* Article reader sheet — full-screen overlay that renders content
+       extracted by the Netlify /api/extract function, so a story opens
+       inside Surf Tracker instead of a new browser tab. */
+    .reader-sheet {
+      position: fixed; inset: 0; z-index: 200;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      animation: sheetSlide 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reader-sheet[hidden] { display: none; }
+    @keyframes sheetSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .reader-sheet-head {
+      display: flex; align-items: center; gap: 12px;
+      padding:
+        calc(env(safe-area-inset-top) + 14px)
+        calc(env(safe-area-inset-right) + 16px)
+        14px
+        calc(env(safe-area-inset-left) + 16px);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky; top: 0;
+    }
+    .reader-sheet-label {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      display: inline-flex; align-items: center; gap: 8px;
+      min-width: 0; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .reader-sheet-favicon {
+      width: 16px; height: 16px; border-radius: 3px; object-fit: contain;
+      flex: 0 0 auto;
+    }
+    .reader-sheet-open {
+      margin-left: auto; flex: 0 0 auto;
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 999px; padding: 8px 14px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; cursor: pointer; text-decoration: none;
+      white-space: nowrap;
+    }
+    .reader-sheet-open:hover { background: var(--panel-2); border-color: var(--border-strong); }
+    .reader-sheet-open[hidden] { display: none; }
+    .reader-sheet-close {
+      flex: 0 0 auto;
+      background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 999px; padding: 8px 16px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .reader-sheet-close:hover { background: var(--panel-3); border-color: var(--border-strong); }
+    /* Thin/failed-extraction fallback: never a blank window — say why, show what
+       we have (the feed summary), and offer Open-original (primary) + Try-again. */
+    .reader-sheet-fallback { text-align: center; padding: 32px 0; }
+    .reader-fallback-title {
+      font-size: 20px; font-weight: 800; color: var(--text); margin: 0 0 8px;
+    }
+    .reader-fallback-reason { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+    .reader-fallback-summary {
+      text-align: left; color: var(--text-2); font-size: 16px; line-height: 1.55;
+      margin: 0 auto 24px; max-width: 680px;
+    }
+    .reader-fallback-actions {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    }
+    .reader-fallback-btn {
+      display: inline-block; background: var(--accent); color: #fff;
+      border: none; border-radius: 999px; padding: 12px 22px;
+      font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none;
+    }
+    .reader-fallback-btn:hover { filter: brightness(1.08); }
+    .reader-fallback-btn.secondary {
+      background: transparent; color: var(--text); border: 1px solid var(--border);
+    }
+    .reader-fallback-btn.secondary:hover {
+      background: var(--panel-2); border-color: var(--border-strong); filter: none;
+    }
+    .reader-sheet-body {
+      flex: 1; overflow-y: auto;
+      padding:
+        24px
+        calc(env(safe-area-inset-right) + 20px)
+        calc(env(safe-area-inset-bottom) + 32px)
+        calc(env(safe-area-inset-left) + 20px);
+      -webkit-overflow-scrolling: touch;
+    }
+    .reader-sheet-body > * { max-width: 720px; margin-left: auto; margin-right: auto; }
+    .reader-sheet-title {
+      font-size: 28px; font-weight: 800;
+      line-height: 1.15; letter-spacing: -0.4px;
+      margin: 8px auto 14px;
+    }
+    .reader-sheet-meta {
+      color: var(--muted); font-size: 13px;
+      margin-bottom: 26px;
+    }
+    .reader-sheet-content { font-size: 17px; line-height: 1.6; color: var(--text); }
+    /* Force the extracted article HTML to inherit our dark theme. Publisher
+       templates frequently carry inline color/background attributes that
+       would otherwise render as black-on-dark or light boxes inside the
+       sheet. Links keep an explicit accent color so they remain
+       distinguishable from body text. */
+    .reader-sheet-content,
+    .reader-sheet-content * {
+      color: inherit !important;
+      background-color: transparent !important;
+      background-image: none !important;
+    }
+    .reader-sheet-content a,
+    .reader-sheet-content a * { color: var(--accent) !important; }
+    .reader-sheet-content pre,
+    .reader-sheet-content code {
+      background-color: var(--panel) !important;
+      color: var(--text) !important;
+    }
+    .reader-sheet-content p { margin: 0 0 16px; }
+    .reader-sheet-content a { color: var(--accent); }
+    .reader-sheet-content a:hover { text-decoration: underline; }
+    .reader-sheet-content h2 {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.2px;
+      margin: 28px 0 12px;
+    }
+    .reader-sheet-content h3 { font-size: 18px; font-weight: 700; margin: 24px 0 10px; }
+    .reader-sheet-content blockquote {
+      margin: 0 0 16px; padding: 4px 0 4px 16px;
+      border-left: 3px solid var(--border-strong); color: var(--text-2);
+    }
+    .reader-sheet-content ul, .reader-sheet-content ol { margin: 0 0 16px; padding-left: 24px; }
+    .reader-sheet-content li { margin-bottom: 6px; }
+    /* Hide media in the reader view — keeps the layout clean, sidesteps
+       hotlink-protected publisher CDNs that show broken images, and matches
+       the text-first aesthetic of native news readers. */
+    .reader-sheet-content img,
+    .reader-sheet-content figure,
+    .reader-sheet-content video,
+    .reader-sheet-content iframe { display: none; }
+    .reader-sheet-sk { margin: 0 auto; max-width: 720px; }
+    .reader-sheet-sk .sk-bar { margin-bottom: 12px; }
+
+    /* Respect reduced-motion preference everywhere. */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      /* A spinner that can't spin reads as a broken, frozen ring — worse than
+         no spinner. Hide it; the live "Refreshing N/M…" button label and the
+         result toast carry the feedback without motion. */
+      .btn-spinner { display: none !important; }
+    }
+
+    /* ---------- News-view toolbar ----------
+       The news screen shares the app-wide neon-dark design language: the cyan
+       accent, monospaced uppercase HUD captions, and glowing controls. The
+       scope banner, triage toggle, source segment, signal chips, status row,
+       and feed cards all inherit the base component styles above, so the news
+       screen reads as the same app as the Holdings list. Only the toolbar
+       layout (three stacked rows) and the action buttons are defined here. */
+    /* Toolbar pills share the Row 2 height/radius of the triage toggle beside them. */
+    #newsView .pill-btn { padding: 13px 14px; font-size: 12px; border-radius: 12px; }
+    #newsView .pill-btn svg { width: 15px; height: 15px; }
+
+    /* Pinned news toolbar — mirrors the companies-view lock-to-top layout so
+       both screens share the same structure and styling. */
+    .news-toolbar {
+      position: sticky;
+      top: var(--header-h, 56px);
+      z-index: 19;
+      margin: -10px -14px 12px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.8);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .news-toolbar > :last-child { margin-bottom: 0; }
+    /* Row 2: triage toggle on its own line; AI summary + AI prompt below it. */
+    .news-row2 { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+    /* Triage takes the full first line (its label is long); the AI summary and
+       AI prompt pills share the second line, splitting it evenly. This two-row
+       layout is intentional at every width — three buttons on one row crowds
+       the long triage label. */
+    .news-row2 .primary-filter { flex: 1 1 100%; margin: 0; }
+    .news-row2 .pill-btn { margin: 0; flex: 1 1 0; justify-content: center; }
+    /* AI actions — accent-tinted so they read as the "smart" pills. */
+    .ai-summary-btn { color: var(--accent); border-color: var(--accent-border, var(--border-strong)); }
+    .ai-summary-btn:hover { border-color: var(--accent); }
+    /* Row 3: three full-width action buttons in the shared button style. */
+    .news-actions { position: relative; display: flex; gap: 8px; margin: 0; }
+    #newsView .news-btn {
+      flex: 1;
+      appearance: none; -webkit-appearance: none;
+      font-family: var(--mono);
+      font-size: 13px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 13px 12px; border-radius: 12px;
+      background: var(--panel-2); color: var(--text-2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease, transform 0.1s ease, color 0.15s ease;
+    }
+    #newsView .news-btn:hover { background: var(--panel-3); border-color: var(--border-strong); color: var(--text); }
+    #newsView .news-btn:active { transform: scale(0.98); }
+    /* Refresh in flight: light the button with the accent + a spinner so the
+       tap is acknowledged immediately, even on a warm feed where the existing
+       cards stay put and no skeletons render. */
+    #newsView .news-btn.is-loading {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(92, 225, 255, 0.12);
+      color: var(--accent); border-color: var(--accent);
+      box-shadow: inset 0 0 14px rgba(92, 225, 255, 0.1), 0 0 18px var(--accent-glow);
+      cursor: default;
+    }
+    #newsView .news-btn.open {
+      background: rgba(92, 225, 255, 0.12);
+      color: var(--accent); border-color: var(--accent);
+      box-shadow: inset 0 0 14px rgba(92, 225, 255, 0.1), 0 0 18px var(--accent-glow);
+    }
+    /* Return is the primary way out of the news view, so give it the accent
+       treatment plus a left-pointing arrow to read as "go back" at a glance.
+       It gets extra width and may wrap: on the home feed it carries the long
+       "Search Selected Holdings" label. */
+    #newsView .news-btn-return {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      flex: 1.8; min-width: 0;
+      white-space: normal; line-height: 1.25;
+      background: rgba(92, 225, 255, 0.1);
+      color: var(--accent); border-color: var(--accent);
+    }
+    #newsView .news-btn-return svg { width: 15px; height: 15px; flex-shrink: 0; }
+    /* Home-feed mode: the button navigates FORWARD into the watchlist
+       ("Search Selected Holdings"), so the arrow mirrors to point right and
+       trails the label. */
+    #newsView .news-btn-return.fwd svg { transform: scaleX(-1); order: 1; }
+    #newsView .news-btn-return:hover {
+      background: rgba(92, 225, 255, 0.18);
+      color: var(--accent); border-color: var(--accent);
+      box-shadow: 0 0 18px var(--accent-glow);
+    }
+    /* Category filter dropdown, anchored beneath the action row. */
+    #newsView .filter-menu {
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+      z-index: 40;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 8px;
+      box-shadow: var(--shadow-lg);
+    }
+    #newsView .filter-menu[hidden] { display: none; }
+    #newsView .filter-menu .filters {
+      display: flex; flex-direction: column; gap: 6px;
+      margin: 0; padding: 0; overflow: visible;
+    }
+    #newsView .filter-menu .chip {
+      width: 100%; box-sizing: border-box;
+      justify-content: space-between;
+      border-radius: 9px;
+      padding: 10px 12px; font-size: 12px;
+    }
+
+    /* Home button in the title bar — a compact pillbox chevron that returns
+       to the home feed. Hidden while the home feed itself is showing. */
+    .home-btn {
+      appearance: none; -webkit-appearance: none;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; padding: 0;
+      background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+    .home-btn[hidden] { display: none; }
+    .home-btn:hover { background: var(--panel-3); }
+    .home-btn:active { transform: scale(0.94); }
+    .home-btn svg { width: 18px; height: 18px; }

@@ -1,0 +1,154 @@
+{
+  "_metadata": {
+    "purpose": "Authoritative, vetted CRPT reference data for the tracker app. This file is the SOURCE OF TRUTH for holdings and fund facts. When any other source disagrees, this file wins.",
+    "source_of_truth": "First Trust official CRPT holdings export (CRPT-Holdings.xlsx), the fund's own daily holdings file.",
+    "holdings_as_of": "2026-07-17",
+    "fund_facts_as_of": "2026-07-17",
+    "compiled_by": "Leo Bernstein",
+    "data_honesty_rules": [
+      "Everything in this file is a point-in-time snapshot. Label holdings 'as of 2026-07-17' in the UI. CRPT is actively managed; weights change daily.",
+      "NEVER hardcode a live price. Prices/returns come from a runtime market-data adapter, not this file. The performance figures below are labeled historical snapshots for reference only.",
+      "When third-party sources (Morningstar, StockAnalysis, Yahoo) disagree with this file on holdings or weights, this file is correct. The disagreements are date/vendor differences, not errors to reconcile. See source_conflicts below.",
+      "Do not fabricate any figure. If a needed value is not in this file and not returned by the adapter, show 'no data', never a guess."
+    ]
+  },
+
+  "fund": {
+    "etf_name": "First Trust SkyBridge Crypto Industry and Digital Economy ETF",
+    "ticker": "CRPT",
+    "intraday_nav_ticker": "CRPTIV",
+    "issuer": "First Trust Advisors L.P.",
+    "portfolio_manager_subadvisor": "SkyBridge Capital II, LLC",
+    "investor_servicing_agent": "Bank of New York Mellon Corp",
+    "cusip": "33740F540",
+    "isin": "US33740F5402",
+    "exchange": "NYSE Arca",
+    "fund_type": "Technology / Equity Digital Assets",
+    "legal_type": "Exchange Traded Fund",
+    "inception_date": "2021-09-20",
+    "inception_price": 18.91,
+    "inception_nav": 18.91,
+    "fiscal_year_end": "08-31",
+    "total_expense_ratio_pct": 0.85,
+    "expense_ratio_as_of": "2026-01-02",
+    "management_style": "Actively Managed",
+    "diversification": "Non-diversified",
+    "mandate_summary": "Under normal conditions invests >=80% of net assets in common stocks and ADRs of Crypto Industry and Digital Economy companies, with >=50% of net assets specifically in Crypto Industry Companies.",
+    "yield_pct": 0.99
+  },
+
+  "current_fund_data": {
+    "as_of": "2026-07-17",
+    "note": "Snapshot from First Trust fund page. Reference only; refresh via adapter for live values.",
+    "closing_nav": 11.44,
+    "closing_market_price": 11.44,
+    "bid_ask_midpoint": 11.40,
+    "bid_ask_discount_pct": 0.35,
+    "median_30d_bid_ask_spread_pct": 1.64,
+    "total_net_assets_usd": 84120622,
+    "outstanding_shares": 7350002,
+    "daily_volume": 159404,
+    "avg_30d_daily_volume": 83187,
+    "market_price_52w_high": 24.74,
+    "market_price_52w_low": 10.91,
+    "nav_52w_high": 24.71,
+    "nav_52w_low": 11.34,
+    "holdings_count_excluding_cash": 19
+  },
+
+  "holdings": {
+    "as_of": "2026-07-17",
+    "count_securities": 19,
+    "count_lines_including_cash": 20,
+    "pct_in_top_10": 87.52,
+    "untickered_holdings_warning": "Some third-party sites (Morningstar 7/19, StockAnalysis 7/9) list a top holding 'Ft Sky Crypt Cym 1002063' at ~19-20% with NO ticker/CUSIP. It is NOT in First Trust's official file (this file). It is almost certainly a SkyBridge-affiliated Cayman feeder/sleeve reported via look-through here. IF it ever appears in holdings data, the app must treat it as UN-PRICEABLE via market-data APIs: no ticker fetch, mark from fund data only. Never send it to the price adapter.",
+    "line_items": [
+      {"name": "Strategy Incorporated (Class A)", "ticker": "MSTR", "cusip": "594972408", "classification": "Software", "shares": 180668, "market_value_usd": 17136359.80, "weight_pct": 20.36, "priceable": true},
+      {"name": "Coinbase Global, Inc. (Class A)", "ticker": "COIN", "cusip": "19260Q107", "classification": "Capital Markets", "shares": 58393, "market_value_usd": 9174708.16, "weight_pct": 10.90, "priceable": true},
+      {"name": "Metaplanet Inc.", "ticker": "3350.JP", "cusip": "J1357P101", "classification": "Hotels, Restaurants & Leisure", "shares": 6405014, "market_value_usd": 8716987.99, "weight_pct": 10.36, "priceable": true, "note": "Japan-listed (Tokyo 3350). Non-US ticker: Bloomberg '3350 JP Equity', Yahoo '3350.T'. Many free APIs lack coverage. Handle explicitly in the adapter."},
+      {"name": "Robinhood Markets, Inc. (Class A)", "ticker": "HOOD", "cusip": "770700102", "classification": "Capital Markets", "shares": 84978, "market_value_usd": 8494400.88, "weight_pct": 10.09, "priceable": true},
+      {"name": "Strive, Inc. (Class A)", "ticker": "ASST", "cusip": "862945300", "classification": "Health Care Equipment & Supplies", "shares": 700442, "market_value_usd": 8307242.12, "weight_pct": 9.87, "priceable": true, "note": "Classification 'Health Care Equipment & Supplies' comes straight from the fund file. It looks odd for a crypto-treasury company (Strive/ASST) but it is the fund's own GICS tag. Display as-is; do not silently 'correct' it. Flag to Leo for a footnote if shown to Svolos."},
+      {"name": "Galaxy Digital Inc. (Class A)", "ticker": "GLXY", "cusip": "36317J209", "classification": "Capital Markets", "shares": 376385, "market_value_usd": 8141207.55, "weight_pct": 9.67, "priceable": true},
+      {"name": "iShares Bitcoin Trust ETF", "ticker": "IBIT", "cusip": "46438F101", "classification": "Other", "shares": 108375, "market_value_usd": 3939431.25, "weight_pct": 4.68, "priceable": true, "btc_etf": true},
+      {"name": "Fidelity Wise Origin Bitcoin Fund", "ticker": "FBTC", "cusip": "315948109", "classification": "Other", "shares": 64721, "market_value_usd": 3612726.22, "weight_pct": 4.29, "priceable": true, "btc_etf": true},
+      {"name": "VanEck Bitcoin ETF", "ticker": "HODL", "cusip": "92189K105", "classification": "Other", "shares": 179031, "market_value_usd": 3245832.03, "weight_pct": 3.86, "priceable": true, "btc_etf": true},
+      {"name": "Bitwise Bitcoin ETF", "ticker": "BITB", "cusip": "09174C104", "classification": "Other", "shares": 92895, "market_value_usd": 3234603.90, "weight_pct": 3.84, "priceable": true, "btc_etf": true},
+      {"name": "Invesco Galaxy Bitcoin ETF", "ticker": "BTCO", "cusip": "46091J101", "classification": "Other", "shares": 50654, "market_value_usd": 3231725.20, "weight_pct": 3.84, "priceable": true, "btc_etf": true},
+      {"name": "Cipher Digital Inc.", "ticker": "CIFR", "cusip": "17253J106", "classification": "Software", "shares": 75439, "market_value_usd": 1324708.84, "weight_pct": 1.57, "priceable": true, "miner": true},
+      {"name": "TeraWulf Inc.", "ticker": "WULF", "cusip": "88080T104", "classification": "Software", "shares": 69138, "market_value_usd": 1255546.08, "weight_pct": 1.49, "priceable": true, "miner": true},
+      {"name": "IREN Ltd.", "ticker": "IREN", "cusip": "Q4982L109", "classification": "Software", "shares": 31247, "market_value_usd": 1050524.14, "weight_pct": 1.25, "priceable": true, "miner": true},
+      {"name": "CleanSpark, Inc.", "ticker": "CLSK", "cusip": "18452B209", "classification": "Software", "shares": 64165, "market_value_usd": 836069.95, "weight_pct": 0.99, "priceable": true, "miner": true},
+      {"name": "Riot Platforms, Inc.", "ticker": "RIOT", "cusip": "767292105", "classification": "Software", "shares": 44052, "market_value_usd": 804389.52, "weight_pct": 0.96, "priceable": true, "miner": true},
+      {"name": "Bitdeer Technologies Group (Class A)", "ticker": "BTDR", "cusip": "G11448100", "classification": "Software", "shares": 53447, "market_value_usd": 574020.78, "weight_pct": 0.68, "priceable": true, "miner": true},
+      {"name": "MARA Holdings, Inc.", "ticker": "MARA", "cusip": "565788106", "classification": "Software", "shares": 53245, "market_value_usd": 569189.05, "weight_pct": 0.68, "priceable": true, "miner": true},
+      {"name": "HIVE Digital Technologies Ltd.", "ticker": "HIVE", "cusip": "433921103", "classification": "Software", "shares": 171286, "market_value_usd": 488165.10, "weight_pct": 0.58, "priceable": true, "miner": true},
+      {"name": "US Dollar", "ticker": "$USD", "cusip": null, "classification": "Cash", "shares": 21577, "market_value_usd": 21576.54, "weight_pct": 0.03, "priceable": false}
+    ],
+    "exposure_buckets_note": "Useful groupings the UI can surface. Computed from this file's weights.",
+    "exposure_buckets": {
+      "direct_btc_etfs": {"tickers": ["IBIT","FBTC","HODL","BITB","BTCO"], "approx_weight_pct": 20.51, "label": "Direct Bitcoin exposure via spot BTC ETFs"},
+      "bitcoin_treasury_companies": {"tickers": ["MSTR","3350.JP","ASST"], "approx_weight_pct": 40.59, "label": "Bitcoin-treasury / proxy companies (largest structural bet)"},
+      "crypto_financials": {"tickers": ["COIN","HOOD","GLXY"], "approx_weight_pct": 30.66, "label": "Crypto-exposed financial/capital-markets names"},
+      "miners": {"tickers": ["CIFR","WULF","IREN","CLSK","RIOT","BTDR","MARA","HIVE"], "approx_weight_pct": 8.20, "label": "Bitcoin miners"}
+    }
+  },
+
+  "fund_characteristics": {
+    "as_of": "2026-06-30",
+    "max_market_cap_usd_mm": 90303,
+    "median_market_cap_usd_mm": 7659,
+    "min_market_cap_usd_mm": 797,
+    "price_to_book": 1.37,
+    "price_to_sales": 0.57
+  },
+
+  "top_country_exposure": {
+    "as_of": "2026-07-17",
+    "breakdown_pct": {"United States": 87.13, "Japan": 10.36, "Australia": 1.25, "Singapore": 0.68, "Canada": 0.58}
+  },
+
+  "top_industry_exposure": {
+    "as_of": "2026-07-17",
+    "breakdown_pct": {"Capital Markets": 30.68, "Software": 28.57, "Hotels, Restaurants & Leisure": 10.36, "Health Care Equipment & Supplies": 9.87}
+  },
+
+  "performance_snapshot": {
+    "as_of": "2026-06-30",
+    "source": "First Trust month/quarter-end performance table",
+    "note": "HISTORICAL reference figures. Do NOT present as current. The app's live chart must be computed from the adapter's price series, not from these static numbers. Trailing returns are the crypto-equity story: severe drawdown YTD/1Y, strong 3Y. Benchmarked against S&P 500 by First Trust (a deliberately conservative benchmark that flatters equity indices vs a crypto fund).",
+    "fund_nav_returns_pct": {"3_month": -3.96, "ytd": -24.77, "1_year": -50.45, "3_year": 24.20, "5_year": null, "since_inception": -9.36},
+    "fund_market_price_returns_pct": {"3_month": -3.14, "ytd": -24.35, "1_year": -50.32, "3_year": 24.10, "since_inception": -9.34},
+    "sp500_returns_pct": {"3_month": 15.20, "ytd": 10.21, "1_year": 22.32, "3_year": 20.61, "since_inception": 13.67},
+    "three_year_statistics": {
+      "note": "3Y stats as of 6/30/2026, CRPT vs S&P 500. This is the risk story worth surfacing: crypto-equity beta and volatility are extreme.",
+      "crpt": {"std_dev_pct": 74.74, "alpha": -15.51, "beta": 3.84, "sharpe": 0.57, "correlation": 0.67},
+      "sp500": {"std_dev_pct": 13.05, "alpha": null, "beta": 1.00, "sharpe": 1.16, "correlation": 1.00}
+    },
+    "annual_total_return_pct_by_year": {
+      "note": "Calendar-year price returns. Shows the extreme cyclicality: -80.84% (2022), +193.86% (2023), +75.29% (2024), -9.52% (2025), -23.76% YTD 2026.",
+      "2022": -80.84, "2023": 193.86, "2024": 75.29, "2025": -9.52, "2026_ytd": -23.76
+    }
+  },
+
+  "premium_discount_history": {
+    "as_of": "2026-07-17",
+    "note": "Days traded at premium vs discount, by period. Trades near NAV most days with occasional spikes.",
+    "days_at_premium": {"2025": 168, "q1_2026": 32, "q2_2026": 18, "q3_2026": 5},
+    "days_at_discount": {"2025": 82, "q1_2026": 29, "q2_2026": 44, "q3_2026": 7}
+  },
+
+  "benchmark_config": {
+    "note": "First Trust benchmarks CRPT against the S&P 500, which is standard for the fund but misleading for judging a crypto-industry ETF in isolation. For an internal SkyBridge tool, show MORE THAN ONE. Recommend a spot-BTC proxy AND a crypto-equity peer AND a broad-equity reference so the viewer can separate 'is crypto up' from 'is CRPT beating its own category'.",
+    "primary": {"ticker": "IBIT", "label": "iShares Bitcoin Trust (spot BTC proxy)"},
+    "secondary": {"ticker": "BITQ", "label": "Bitwise Crypto Industry Innovators (crypto-equity peer)"},
+    "tertiary": {"ticker": "SPY", "label": "S&P 500 (broad equity reference, matches First Trust's official benchmark)"}
+  },
+
+  "source_conflicts": {
+    "note": "Documented so the app (and Leo) know WHY vetted sources disagree. All are date/vendor artifacts, not errors. This file (First Trust official, 7/17) is authoritative.",
+    "mstr_weight": {"first_trust_official_7_17": 20.36, "morningstar_7_19": 20.36, "stockanalysis_7_9": 18.79, "leo_workbook_earlier": 19.75, "resolution": "Use 20.36 (official 7/17)."},
+    "holdings_count": {"first_trust_official": "19 securities + cash", "stockanalysis": 16, "some_vendor_pie": 16, "resolution": "Use 19 securities (20 lines incl. cash). Lower counts are stale or exclude BTC-ETF lines."},
+    "net_assets": {"first_trust_7_17": 84120622, "yahoo_summary": 83720000, "vendor_pie": 85420000, "resolution": "Use First Trust 84.12M (7/17). Others are different dates."},
+    "top_holding_ghost": {"issue": "Morningstar/StockAnalysis show 'Ft Sky Crypt Cym 1002063' ~19-20% as #1; absent from First Trust official file.", "resolution": "Treat as a look-through/reporting artifact of a SkyBridge Cayman feeder. Not priceable. Do not add to holdings unless it appears in the official file."}
+  }
+}
