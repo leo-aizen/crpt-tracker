@@ -11,12 +11,12 @@
   <title>CRPT Tracker</title>
   <!-- SURF visual baseline, reused verbatim as its own stylesheet (style parity,
        not code copy). CRPT-specific components live in crpt.css. -->
-  <link rel="stylesheet" href="css/surf-styles.css?v=0.10.0" />
-  <link rel="stylesheet" href="css/crpt.css?v=0.10.0" />
+  <link rel="stylesheet" href="css/surf-styles.css?v=0.11.0" />
+  <link rel="stylesheet" href="css/crpt.css?v=0.11.0" />
 </head>
 <body>
   <header>
-    <h1 id="title">CRPT <span class="version">v0.10.0</span></h1>
+    <h1 id="title">CRPT <span class="version">v0.11.0</span></h1>
     <div class="news-meta" id="dataMeta">
       <div class="scope-banner" id="scopeBanner"></div>
       <div class="status" id="loadStatus">connecting…</div>
@@ -149,6 +149,13 @@
               <div class="crpt-ddlist" id="holdingsList" role="listbox"></div>
             </div>
           </div>
+          <div class="crpt-dd" id="sourcesDD">
+            <button type="button" class="crpt-range crpt-ddbtn" id="sourcesBtn"
+                    aria-haspopup="listbox" aria-expanded="false">Sources ▾</button>
+            <div class="crpt-ddpanel" id="sourcesPanel" hidden>
+              <div class="crpt-ddlist" id="sourcesList" role="listbox"></div>
+            </div>
+          </div>
           <button type="button" class="crpt-range" id="filtersBtn" aria-expanded="false">Filters ▾</button>
           <input type="search" class="input crpt-newssearch" id="newsSearch"
                  placeholder="Search headlines…" />
@@ -167,7 +174,7 @@
     </section>
   </main>
 
-  <script src="js/chart.js?v=0.10.0"></script>
-  <script src="js/app.js?v=0.10.0"></script>
+  <script src="js/chart.js?v=0.11.0"></script>
+  <script src="js/app.js?v=0.11.0"></script>
 </body>
 </html>

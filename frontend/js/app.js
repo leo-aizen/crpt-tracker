@@ -391,6 +391,7 @@ $("holdingsMode").addEventListener("click", (ev) => {
 let newsData = null;
 let newsTicker = "ALL";
 let newsSignal = "ALL";
+let newsSource = "ALL";
 let newsQuery = "";
 
 /* Signal chip colors: SURF's own signal palette (see surf-styles.css vars). */
@@ -408,6 +409,7 @@ const SIGNAL_STYLE = {
 function newsMatches(it) {
   if (newsTicker !== "ALL" && !it.tickers.includes(newsTicker)) return false;
   if (newsSignal !== "ALL" && it.signal !== newsSignal) return false;
+  if (newsSource !== "ALL" && (it.source || "unattributed") !== newsSource) return false;
   if (newsQuery) {
     const hay = (it.headline + " " + (it.summary || "")).toLowerCase();
     if (!hay.includes(newsQuery)) return false;
@@ -470,9 +472,35 @@ function setHoldingsOpen(open) {
 
 function updateNewsControls() {
   $("holdingsBtn").textContent = (newsTicker === "ALL" ? "All holdings" : newsTicker) + " ▾";
+  $("sourcesBtn").textContent = (newsSource === "ALL" ? "Sources" : newsSource) + " ▾";
   const labels = SIGNAL_LABELS();
   $("filtersBtn").textContent =
     (newsSignal === "ALL" ? "Filters" : `Filters · ${labels[newsSignal] || newsSignal}`) + " ▾";
+}
+
+function renderSourcesList() {
+  const d = newsData;
+  if (!d) return;
+  const counts = {};
+  d.items.forEach((it) => {
+    const s = it.source || "unattributed";
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([s, n]) => `
+    <button type="button" role="option" class="crpt-ddrow ${s === newsSource ? "active" : ""}" data-source="${esc(s)}">
+      <span class="nm">${esc(s)}</span>
+      <span class="cnt mono">${n}</span>
+    </button>`).join("");
+  $("sourcesList").innerHTML = `
+    <button type="button" role="option" class="crpt-ddrow ${newsSource === "ALL" ? "active" : ""}" data-source="ALL">
+      <span class="nm">All sources</span><span class="cnt mono">${d.items.length}</span>
+    </button>` + rows;
+}
+
+function setSourcesOpen(open) {
+  $("sourcesPanel").hidden = !open;
+  $("sourcesBtn").setAttribute("aria-expanded", String(open));
+  if (open) renderSourcesList();
 }
 
 function renderSignalFilter(d) {
@@ -534,8 +562,11 @@ async function loadNews(force) {
     newsData = await res.json();
     $("newsAsOf").textContent = `fetched ${newsData.fetched_at_utc}`;
     $("newsFoot").textContent =
-      `Source: ${newsData.source}. Cached 5 min server-side; stories appearing under several ` +
-      `holdings are deduped with tickers merged. Cash and untickered lines never reach the adapter.`;
+      `Sources: ${newsData.source}. Cached 5 min server-side; stories appearing under several ` +
+      `holdings are deduped with tickers merged. ` +
+      (newsData.quality_filtered ? `${newsData.quality_filtered} clickbait/listicle items were ` +
+      `filtered out by transparent keyword rules (see backend/newsdata/quality.py). ` : "") +
+      `Cash and untickered lines never reach the adapter.`;
     renderSignalFilter(newsData);
     renderNews();
   } catch (err) {
@@ -559,6 +590,7 @@ function buildAiPrompt() {
   const scope = [
     newsTicker === "ALL" ? "all 19 holdings" : `holding ${newsTicker}`,
     newsSignal === "ALL" ? "all signals" : `signal: ${labels[newsSignal] || newsSignal}`,
+    newsSource === "ALL" ? "all sources" : `source: ${newsSource}`,
     newsQuery ? `search: "${newsQuery}"` : null,
   ].filter(Boolean).join(" · ");
 
@@ -627,6 +659,7 @@ async function copyAiPrompt() {
 
 document.getElementById("view-news").addEventListener("click", (ev) => {
   const ddRow = ev.target.closest("#holdingsList .crpt-ddrow");
+  const srcRow = ev.target.closest("#sourcesList .crpt-ddrow");
   const tag = ev.target.closest(".crpt-newscard .tag");
   const sigPill = ev.target.closest("#signalFilter .crpt-range");
   const sigChip = ev.target.closest(".crpt-newscard .sig");
@@ -634,15 +667,21 @@ document.getElementById("view-news").addEventListener("click", (ev) => {
     newsTicker = ddRow ? ddRow.dataset.ticker : tag.dataset.ticker;
     setHoldingsOpen(false);
   }
+  if (srcRow) {
+    newsSource = srcRow.dataset.source;
+    setSourcesOpen(false);
+  }
   if (sigPill || sigChip) newsSignal = sigPill ? sigPill.dataset.signal : sigChip.dataset.signal;
-  if (ddRow || tag || sigPill || sigChip) {
+  if (ddRow || srcRow || tag || sigPill || sigChip) {
     if (newsData) { renderSignalFilter(newsData); renderNews(); }
   }
 });
+$("sourcesBtn").addEventListener("click", () => setSourcesOpen($("sourcesPanel").hidden));
 $("holdingsBtn").addEventListener("click", () => setHoldingsOpen($("holdingsPanel").hidden));
 $("holdingsSearch").addEventListener("input", (ev) => renderHoldingsList(ev.target.value.trim()));
 document.addEventListener("click", (ev) => {
   if (!$("holdingsPanel").hidden && !ev.target.closest("#holdingsDD")) setHoldingsOpen(false);
+  if (!$("sourcesPanel").hidden && !ev.target.closest("#sourcesDD")) setSourcesOpen(false);
 });
 $("filtersBtn").addEventListener("click", () => {
   const wrap = $("signalWrap");

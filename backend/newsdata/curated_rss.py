@@ -22,6 +22,9 @@ OUTLETS = [
     ("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
     ("Cointelegraph", "https://cointelegraph.com/rss"),
     ("The Block", "https://www.theblock.co/rss.xml"),
+    # Corporate press-release wires — the companies' own announcements
+    ("GlobeNewswire", "https://www.globenewswire.com/RssFeed/orgclass/1/feedTitle/GlobeNewswire%20-%20News%20about%20Public%20Companies"),
+    ("PR Newswire", "https://www.prnewswire.com/rss/news-releases-list.rss"),
 ]
 
 # Per-holding match terms: case-insensitive name phrases + case-sensitive

@@ -19,7 +19,7 @@ import db
 import marketdata
 import newsdata
 import socialdata
-from newsdata import signals
+from newsdata import quality, signals
 
 ADAPTER = marketdata.get_adapter()
 NEWS = newsdata.get_adapter()
@@ -205,9 +205,10 @@ def news():
     tickers = [r["ticker"] for r in rows]
     names = {r["ticker"]: r["name"] for r in rows}
     try:
-        items = _cached("news:all", 300, lambda: NEWS.news(tickers, names))
+        raw = _cached("news:all", 300, lambda: NEWS.news(tickers, names))
     except Exception as e:
         raise HTTPException(502, f"news unavailable ({e})")
+    items, dropped = quality.clean(raw)
     for item in items:
         item["signal"] = signals.classify(item.get("headline"), item.get("summary"))
     return {
@@ -216,6 +217,7 @@ def news():
         "fetched_at_utc": _now_utc(),
         "tickers": tickers,
         "signals": [{"key": k, "label": lbl} for k, lbl in signals.SIGNALS],
+        "quality_filtered": dropped,
         "items": items,
     }
 

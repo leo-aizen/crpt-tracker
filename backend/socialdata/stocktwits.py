@@ -6,6 +6,8 @@ newest 30 messages' timespan and labeled as such in the UI. Tokyo-listed
 Metaplanet is not on Stocktwits; its absence renders as "no data".
 """
 import json
+import re
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -25,6 +27,19 @@ def _parse_ts(s):
         return None
 
 
+_TAG_RX = re.compile(r"\$[A-Za-z0-9.]+")
+_URL_RX = re.compile(r"https?://\S+")
+
+
+def _substantive(body: str) -> bool:
+    """Keep posts with actual words; drop tag-walls, link dumps, emoji spam."""
+    if len(_TAG_RX.findall(body)) > 6:
+        return False
+    stripped = _URL_RX.sub("", _TAG_RX.sub("", body))
+    letters = sum(1 for ch in stripped if ch.isalpha())
+    return letters >= 20
+
+
 def _fetch_symbol(our_sym):
     st_sym = SYMBOL_MAP.get(our_sym, our_sym)
     if st_sym is None:
@@ -34,15 +49,20 @@ def _fetch_symbol(our_sym):
     with urllib.request.urlopen(req, timeout=10) as resp:
         data = json.load(resp)
     msgs = data.get("messages") or []
-    posts, stamps = [], []
+    posts, stamps, seen_bodies = [], [], set()
     for m in msgs:
         ts = _parse_ts(m.get("created_at") or "")
         if ts:
-            stamps.append(ts)
+            stamps.append(ts)  # rate uses ALL messages — spam is still activity
+        body = (m.get("body") or "").strip()
+        norm = " ".join(body.lower().split())[:60]
+        if not _substantive(body) or norm in seen_bodies:
+            continue  # the readable stream is filtered for substance
+        seen_bodies.add(norm)
         user = (m.get("user") or {}).get("username") or "unknown"
         posts.append({
             "id": m.get("id"),
-            "body": (m.get("body") or "").strip(),
+            "body": body,
             "user": user,
             "likes": (m.get("likes") or {}).get("total", 0),
             "created_utc": ts.isoformat(timespec="seconds") if ts else None,

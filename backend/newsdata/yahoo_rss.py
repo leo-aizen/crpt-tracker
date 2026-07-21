@@ -47,7 +47,7 @@ def _fetch_rss(ticker: str) -> list[dict]:
             "tickers": [ticker],
             "headline": title,
             "summary": (it.findtext("description") or "").strip() or None,
-            "source": None,  # Yahoo RSS doesn't attribute the outlet reliably
+            "source": "Yahoo Finance",  # aggregator feed; outlet not attributed
             "url": link,
             "published_utc": published,
         })
