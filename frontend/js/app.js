@@ -719,8 +719,17 @@ $("newsSearch").addEventListener("input", (ev) => {
 
 /* ---- social tab: mention heatmap + per-holding stream ---- */
 let socialData = null;
+let wikiData = null;
 let socialSelected = null;
-let socialMode = "attention"; // "attention" = share of convo, "price" = day move
+let socialMode = "attention"; // "attention" | "price" | "wiki"
+
+async function loadWiki() {
+  try {
+    const res = await fetch("/api/wiki");
+    if (res.ok) wikiData = await res.json();
+  } catch { wikiData = null; }
+  if (socialData && socialMode === "wiki") renderHeatmap();
+}
 
 /* Finance-standard diverging tile color: red (down) -> neutral -> green (up),
    clamped at ±3% like the classic index heatmaps. Direction is the ONLY thing
@@ -756,6 +765,20 @@ function renderHeatmap() {
       bg = share == null ? "var(--panel-2)" : `rgba(57,135,229,${a2.toFixed(3)})`;
       bigTxt = shareTxt;
       subTxt = weekTxt || (h.covered ? "no rate data" : "no social data");
+    } else if (socialMode === "wiki") {
+      const wk = wikiData?.attention?.[h.ticker];
+      if (wk && wk.momentum_pct != null) {
+        // diverging on momentum vs own baseline, clamped ±60%
+        const t2 = Math.min(Math.abs(wk.momentum_pct), 60) / 60;
+        const a3 = (0.14 + 0.62 * t2).toFixed(3);
+        bg = wk.momentum_pct >= 0 ? `rgba(47,158,95,${a3})` : `rgba(214,69,69,${a3})`;
+        bigTxt = (wk.momentum_pct > 0 ? "+" : "") + wk.momentum_pct + "% reads";
+        subTxt = `${wk.reads_per_day.toLocaleString("en-US")}/day on Wikipedia`;
+      } else {
+        bg = "var(--panel-2)";
+        bigTxt = "no article";
+        subTxt = "not measurable";
+      }
     } else {
       bg = tileColor(chg);
       bigTxt = chgTxt;
@@ -772,6 +795,9 @@ function renderHeatmap() {
   <div class="crpt-heatlegend mono">` + (attention
     ? `<span>quiet</span><span class="grad blue"></span><span>loudest</span>
        <span class="note">color = share of this week's holding conversation (est.) · Stocktwits</span>`
+    : socialMode === "wiki"
+    ? `<span>fading</span><span class="grad"></span><span>spiking</span>
+       <span class="note">color = Wikipedia reads, last 7 days vs own 30-day baseline · official Wikimedia API · ETFs/some miners have no article</span>`
     : `<span>-3%</span><span class="grad"></span><span>+3%</span>
        <span class="note">color = today's price move (~15 min delayed) · text = est. posts/day</span>`) +
   `</div>`;
@@ -914,4 +940,5 @@ loadChart(currentRange);
 loadHoldings();
 loadNews();
 loadSocial();
+loadWiki();
 setInterval(loadQuote, 60_000);

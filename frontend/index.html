@@ -11,12 +11,12 @@
   <title>CRPT Tracker</title>
   <!-- SURF visual baseline, reused verbatim as its own stylesheet (style parity,
        not code copy). CRPT-specific components live in crpt.css. -->
-  <link rel="stylesheet" href="css/surf-styles.css?v=0.13.0" />
-  <link rel="stylesheet" href="css/crpt.css?v=0.13.0" />
+  <link rel="stylesheet" href="css/surf-styles.css?v=0.14.0" />
+  <link rel="stylesheet" href="css/crpt.css?v=0.14.0" />
 </head>
 <body>
   <header>
-    <h1 id="title">CRPT <span class="version">v0.13.0</span></h1>
+    <h1 id="title">CRPT <span class="version">v0.14.0</span></h1>
   </header>
 
   <main>
@@ -40,6 +40,7 @@
         <div class="crpt-ranges" id="socialModes" role="tablist" aria-label="Heatmap mode">
           <button type="button" role="tab" class="crpt-range active" data-mode="attention">Attention share</button>
           <button type="button" role="tab" class="crpt-range" data-mode="price">Price move</button>
+          <button type="button" role="tab" class="crpt-range" data-mode="wiki">Wiki attention</button>
         </div>
         <div id="heatmapBody"><p class="crpt-footnote">loading…</p></div>
         <p class="crpt-footnote">Attention share = each name's slice of all post activity across the
@@ -170,7 +171,7 @@
     </section>
   </main>
 
-  <script src="js/chart.js?v=0.13.0"></script>
-  <script src="js/app.js?v=0.13.0"></script>
+  <script src="js/chart.js?v=0.14.0"></script>
+  <script src="js/app.js?v=0.14.0"></script>
 </body>
 </html>

@@ -20,6 +20,7 @@ import marketdata
 import newsdata
 import socialdata
 from newsdata import quality, signals
+from socialdata import wiki
 
 ADAPTER = marketdata.get_adapter()
 NEWS = newsdata.get_adapter()
@@ -264,6 +265,23 @@ def social():
              "change_pct": change_pct(r["ticker"])}
             for r in rows
         ],
+    }
+
+
+@app.get("/api/wiki")
+def wiki_attention():
+    """Wikipedia-pageview attention per holding (official Wikimedia API).
+    Holdings without a verified article are absent -> UI shows "no article"."""
+    rows = query("SELECT ticker FROM holdings WHERE priceable = 1 ORDER BY weight_pct DESC")
+    symbols = [r["ticker"] for r in rows]
+    try:
+        data = _cached("wiki:all", 3 * 3600, lambda: wiki.attention(symbols))
+    except Exception as e:
+        raise HTTPException(502, f"wiki attention unavailable ({e})")
+    return {
+        "source": "Wikimedia pageviews API (official, daily article reads)",
+        "fetched_at_utc": _now_utc(),
+        "attention": data,
     }
 
 
