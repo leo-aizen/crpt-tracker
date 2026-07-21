@@ -29,7 +29,13 @@ backend/db.py          SQLite schema (rebuilt on every load)
 backend/loader.py      validate + ingest the snapshot
 backend/main.py        FastAPI: /api/{health,meta,fund,holdings,quote,chart,news}, serves frontend/
 backend/marketdata/    swappable price adapters (yahoo | bloomberg later), env CRPT_MARKETDATA
-backend/newsdata/      swappable news adapters (yahoo_rss | stub), env CRPT_NEWS
+backend/newsdata/      swappable news adapters, env CRPT_NEWS (default "multi":
+                       Yahoo + Google News + WSJ/CNBC/MarketWatch/CoinDesk/
+                       Cointelegraph/The Block + SEC EDGAR, deduped)
+backend/socialdata/    swappable social adapters, env CRPT_SOCIAL (default
+                       "stocktwits", keyless; "reddit" ready — create a free
+                       script app at reddit.com/prefs/apps and set
+                       CRPT_REDDIT_CLIENT_ID / CRPT_REDDIT_CLIENT_SECRET)
 frontend/index.html    app shell (SURF-matched: dark, pinned toolbar, cards)
 frontend/css/surf-styles.css   SURF visual baseline, reused as-is
 frontend/css/crpt.css  CRPT-specific components on SURF variables
