@@ -24,8 +24,10 @@ class MultiAdapter(NewsAdapter):
     def __init__(self):
         self.providers = [YahooRssAdapter(), GoogleNewsAdapter(),
                           CuratedRssAdapter(), SecEdgarAdapter()]
-        self.source_label = ("Yahoo · Google News · WSJ · CNBC · MarketWatch · "
-                             "CoinDesk · Cointelegraph · The Block · SEC EDGAR (deduped)")
+        self.source_label = ("approved outlets only — Yahoo Finance, WSJ, CNBC, Bloomberg, "
+                             "Forbes, CNN, Morningstar, Investing.com, TradingView, "
+                             "Stock Traders Daily, CoinDesk, SEC EDGAR (via direct feeds "
+                             "+ Google News, deduped)")
 
     def news(self, tickers, names=None):
         with ThreadPoolExecutor(max_workers=4) as pool:

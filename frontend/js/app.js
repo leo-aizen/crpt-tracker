@@ -564,8 +564,8 @@ async function loadNews(force) {
     $("newsFoot").textContent =
       `Sources: ${newsData.source}. Cached 5 min server-side; stories appearing under several ` +
       `holdings are deduped with tickers merged. ` +
-      (newsData.quality_filtered ? `${newsData.quality_filtered} clickbait/listicle items were ` +
-      `filtered out by transparent keyword rules (see backend/newsdata/quality.py). ` : "") +
+      (newsData.quality_filtered ? `${newsData.quality_filtered} items were filtered out — ` +
+      `non-approved outlets and clickbait, by transparent rules (backend/newsdata/quality.py). ` : "") +
       `Cash and untickered lines never reach the adapter.`;
     renderSignalFilter(newsData);
     renderNews();

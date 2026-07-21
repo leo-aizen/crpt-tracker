@@ -28,8 +28,11 @@ def _query_for(ticker, names):
     return f'"{ticker}" {name}'.strip() if name else f'"{ticker}" stock'
 
 
-def _fetch_rss(ticker, names):
-    q = urllib.parse.quote(_query_for(ticker, names))
+def _fetch_rss(ticker, names, source_filter=None):
+    q = _query_for(ticker, names)
+    if source_filter:
+        q += f" source:{source_filter}"
+    q = urllib.parse.quote(q)
     url = f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=10) as resp:
@@ -68,9 +71,13 @@ class GoogleNewsAdapter(NewsAdapter):
     source_label = "Google News RSS (multi-outlet headlines)"
 
     def news(self, tickers, names=None):
+        # General sweep per ticker, plus a Bloomberg-targeted query per
+        # ticker — Bloomberg has no free feed of its own, so this is the
+        # only way to surface its headlines systematically.
+        jobs = [(t, None) for t in tickers] + [(t, "bloomberg") for t in tickers]
         merged = {}
         with ThreadPoolExecutor(max_workers=8) as pool:
-            for result in pool.map(lambda t: self._safe(t, names), tickers):
+            for result in pool.map(lambda j: self._safe(j[0], names, j[1]), jobs):
                 for item in result:
                     key = item["url"]
                     if key in merged:
@@ -83,8 +90,8 @@ class GoogleNewsAdapter(NewsAdapter):
         return out
 
     @staticmethod
-    def _safe(ticker, names):
+    def _safe(ticker, names, source_filter=None):
         try:
-            return _fetch_rss(ticker, names)
+            return _fetch_rss(ticker, names, source_filter)
         except Exception:
             return []

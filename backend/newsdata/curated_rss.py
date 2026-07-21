@@ -15,16 +15,13 @@ from .base import NewsAdapter
 
 UA = "Mozilla/5.0 (internal CRPT tracker; contact: SkyBridge research)"
 
+# Direct feeds for allowlisted outlets that publish free RSS. Everything
+# else on the approved list (Forbes, Bloomberg, CNN, Morningstar, ...)
+# arrives via Google News attribution and the allowlist in quality.py.
 OUTLETS = [
     ("WSJ Markets", "https://feeds.a.dj.com/rss/RSSMarketsMain.xml"),
     ("CNBC", "https://www.cnbc.com/id/100003114/device/rss/rss.html"),
-    ("MarketWatch", "https://feeds.content.dowjones.io/public/rss/mw_topstories"),
     ("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
-    ("Cointelegraph", "https://cointelegraph.com/rss"),
-    ("The Block", "https://www.theblock.co/rss.xml"),
-    # Corporate press-release wires — the companies' own announcements
-    ("GlobeNewswire", "https://www.globenewswire.com/RssFeed/orgclass/1/feedTitle/GlobeNewswire%20-%20News%20about%20Public%20Companies"),
-    ("PR Newswire", "https://www.prnewswire.com/rss/news-releases-list.rss"),
 ]
 
 # Per-holding match terms: case-insensitive name phrases + case-sensitive

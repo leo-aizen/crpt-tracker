@@ -1,11 +1,41 @@
-"""Feed hygiene: deterministic clickbait and content-farm filtering.
+"""Feed hygiene: source ALLOWLIST + deterministic clickbait filtering.
 
-A monitoring tool for a registered firm cannot surface "Top Midday Gainers"
-or "3 Stocks That Could Make You a Millionaire". Rules are transparent and
-listed here, not learned — every drop is explainable. The API reports how
-many items were removed so the UI can say so instead of hiding it.
+Only outlets on the firm's approved list appear in the feed, full stop —
+anything unrecognized is dropped, not judged case-by-case. On top of that,
+clickbait patterns are filtered even from approved outlets (a Forbes
+contributor listicle is still a listicle). Rules are transparent and listed
+here, not learned; the API reports how many items were removed.
 """
 import re
+
+# Approved sources. Keys are lowercase substrings matched against the raw
+# source string; values are the canonical display name. Anything that
+# matches nothing is dropped.
+ALLOWED = [
+    ("yahoo", "Yahoo Finance"),
+    ("forbes", "Forbes"),
+    ("morningstar", "Morningstar"),
+    ("cnbc", "CNBC"),          # before cnn: "cnbc" contains no "cnn" but order is cheap safety
+    ("cnn", "CNN"),
+    ("bloomberg", "Bloomberg"),
+    ("sec edgar", "SEC EDGAR"),
+    ("stock trader", "Stock Traders Daily"),
+    ("investing.com", "Investing.com"),
+    ("tradingview", "TradingView"),
+    ("wall street journal", "WSJ"),
+    ("wsj", "WSJ"),
+    ("coindesk", "CoinDesk"),  # the one crypto trade outlet, most-cited institutionally
+]
+
+
+def canonical_source(raw):
+    """Canonical name if the source is approved, else None."""
+    low = (raw or "").lower()
+    for key, name in ALLOWED:
+        if key in low:
+            return name
+    return None
+
 
 # Headline patterns that mark listicle/clickbait content, case-insensitive.
 CLICKBAIT = [re.compile(p, re.I) for p in (
@@ -29,25 +59,18 @@ CLICKBAIT = [re.compile(p, re.I) for p in (
     r"\bwhich is (the )?better (buy|stock)\b",
 )]
 
-# Content farms whose output is algorithmic or listicle-first. Conservative
-# list — established newsrooms stay even when a headline is punchy.
-JUNK_SOURCES = {
-    "Insider Monkey",
-    "StocksToTrade",
-    "simplywall.st",
-    "Simply Wall St.",
-    "24/7 Wall St.",
-}
-
-
-def is_garbage(item) -> bool:
-    if (item.get("source") or "") in JUNK_SOURCES:
-        return True
-    headline = item.get("headline") or ""
-    return any(p.search(headline) for p in CLICKBAIT)
-
 
 def clean(items):
-    """Returns (kept, dropped_count)."""
-    kept = [i for i in items if not is_garbage(i)]
+    """Allowlist sources (rewriting to canonical names), drop clickbait.
+    Returns (kept, dropped_count)."""
+    kept = []
+    for item in items:
+        name = canonical_source(item.get("source"))
+        if name is None:
+            continue
+        headline = item.get("headline") or ""
+        if any(p.search(headline) for p in CLICKBAIT):
+            continue
+        item = {**item, "source": name}
+        kept.append(item)
     return kept, len(items) - len(kept)
